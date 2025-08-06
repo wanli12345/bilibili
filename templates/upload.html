@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>上传视频 - 万里的秘密基地</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f4f5f7;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        nav {
+            background: #00a1d6;
+            padding: 0.5rem 0;
+            margin-bottom: 2rem;
+        }
+        
+        nav .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: white;
+            text-decoration: none;
+        }
+        
+        .nav-links {
+            display: flex;
+            list-style: none;
+            align-items: center;
+        }
+        
+        .nav-links li {
+            margin-left: 2rem;
+        }
+        
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .nav-links a:hover {
+            color: #ffd700;
+        }
+        
+        .upload-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .upload-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .upload-header h1 {
+            color: #00a1d6;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .upload-header p {
+            color: #666;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #00a1d6;
+        }
+        
+        .form-group textarea {
+            height: 120px;
+            resize: vertical;
+        }
+        
+        .file-upload {
+            border: 2px dashed #ddd;
+            border-radius: 5px;
+            padding: 2rem;
+            text-align: center;
+            transition: border-color 0.3s;
+        }
+        
+        .file-upload:hover {
+            border-color: #00a1d6;
+        }
+        
+        .file-upload input[type="file"] {
+            display: none;
+        }
+        
+        .file-upload label {
+            cursor: pointer;
+            color: #00a1d6;
+            font-weight: bold;
+        }
+        
+        .upload-btn {
+            background: #00a1d6;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.3s;
+            width: 100%;
+        }
+        
+        .upload-btn:hover {
+            background: #0088b3;
+        }
+        
+        .upload-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .flash-messages {
+            margin-bottom: 1rem;
+        }
+        
+        .flash-message {
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 0.5rem;
+        }
+        
+        .flash-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .flash-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .upload-progress {
+            margin-top: 1rem;
+            display: none;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #ddd;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #00a1d6;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        
+        .file-info {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 5px;
+            display: none;
+        }
+        
+        .file-info h4 {
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+        
+        .file-info p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="container">
+            <a href="/" class="logo">个人B站</a>
+            <ul class="nav-links">
+                <li><a href="/">首页</a></li>
+                <li><a href="/profile">个人中心</a></li>
+                <li><a href="/logout">退出</a></li>
+            </ul>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="upload-container">
+            <div class="upload-header">
+                <h1>上传视频</h1>
+                <p>分享你的精彩内容</p>
+            </div>
+            
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    <div class="flash-messages">
+                        {% for message in messages %}
+                            <div class="flash-message flash-error">{{ message }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+            
+            <form method="POST" enctype="multipart/form-data" id="uploadForm">
+                <div class="form-group">
+                    <label for="title">视频标题</label>
+                    <input type="text" id="title" name="title" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="description">视频描述</label>
+                    <textarea id="description" name="description" placeholder="请描述你的视频内容..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>选择视频文件</label>
+                    <div class="file-upload">
+                        <input type="file" id="video" name="video" accept="video/*" required>
+                        <label for="video">
+                            <div style="font-size: 3rem; margin-bottom: 1rem;">📹</div>
+                            <div>点击选择视频文件</div>
+                            <div style="font-size: 0.9rem; color: #666; margin-top: 0.5rem;">
+                                支持 MP4, AVI, MOV 等格式，最大 500MB
+                            </div>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>选择视频封面（可选）</label>
+                    <div class="file-upload">
+                        <input type="file" id="thumbnail" name="thumbnail" accept="image/*">
+                        <label for="thumbnail">
+                            <div style="font-size: 3rem; margin-bottom: 1rem;">🖼️</div>
+                            <div>点击选择封面图片</div>
+                            <div style="font-size: 0.9rem; color: #666; margin-top: 0.5rem;">
+                                支持 PNG, JPG, JPEG, GIF 格式，最大 5MB
+                            </div>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="file-info" id="fileInfo">
+                    <h4>文件信息</h4>
+                    <p id="fileName"></p>
+                    <p id="fileSize"></p>
+                </div>
+                
+                <div class="upload-progress" id="uploadProgress">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <p style="text-align: center; margin-top: 0.5rem;" id="progressText">上传中...</p>
+                </div>
+                
+                <button type="submit" class="upload-btn" id="submitBtn">上传视频</button>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        // 文件选择处理
+        document.getElementById('video').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const fileInfo = document.getElementById('fileInfo');
+                const fileName = document.getElementById('fileName');
+                const fileSize = document.getElementById('fileSize');
+                
+                fileName.textContent = `文件名: ${file.name}`;
+                fileSize.textContent = `文件大小: ${(file.size / 1024 / 1024).toFixed(2)} MB`;
+                fileInfo.style.display = 'block';
+            }
+        });
+        
+        // 表单提交处理
+        document.getElementById('uploadForm').addEventListener('submit', function(e) {
+            const submitBtn = document.getElementById('submitBtn');
+            const progress = document.getElementById('uploadProgress');
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            
+            submitBtn.disabled = true;
+            submitBtn.textContent = '上传中...';
+            progress.style.display = 'block';
+            
+            // 模拟上传进度
+            let progressValue = 0;
+            const interval = setInterval(() => {
+                progressValue += Math.random() * 20;
+                if (progressValue > 90) progressValue = 90;
+                progressFill.style.width = progressValue + '%';
+                progressText.textContent = `上传中... ${Math.round(progressValue)}%`;
+            }, 200);
+            
+            // 表单提交后清除进度条
+            setTimeout(() => {
+                clearInterval(interval);
+                progressFill.style.width = '100%';
+                progressText.textContent = '上传完成！';
+            }, 2000);
+        });
+    </script>
+</body>
+</html> 
