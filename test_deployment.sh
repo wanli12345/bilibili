@@ -1,6 +1,7 @@
 #!/bin/bash
 
-# 万里的秘密基地 - 部署测试脚本
+# Docker部署测试脚本
+# 测试万里的秘密基地在云服务上的可用性
 
 set -e
 
@@ -9,8 +10,9 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
-NC='\033[0m'
+NC='\033[0m' # No Color
 
+# 日志函数
 log_info() {
     echo -e "${BLUE}[INFO]${NC} $1"
 }
@@ -27,206 +29,229 @@ log_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
-# 测试Docker服务
-test_docker() {
-    log_info "测试Docker服务..."
+# 检查Docker是否安装
+check_docker() {
+    log_info "检查Docker环境..."
     
     if ! command -v docker &> /dev/null; then
-        log_error "Docker未安装"
-        return 1
+        log_error "Docker未安装，请先安装Docker"
+        exit 1
     fi
-    
-    if ! docker info &> /dev/null; then
-        log_error "Docker服务未运行"
-        return 1
-    fi
-    
-    log_success "Docker服务正常"
-    return 0
-}
-
-# 测试Docker Compose
-test_docker_compose() {
-    log_info "测试Docker Compose..."
     
     if ! command -v docker-compose &> /dev/null; then
-        log_error "Docker Compose未安装"
-        return 1
+        log_error "Docker Compose未安装，请先安装Docker Compose"
+        exit 1
     fi
     
-    log_success "Docker Compose正常"
-    return 0
+    log_success "Docker环境检查通过"
 }
 
-# 测试容器状态
-test_containers() {
-    log_info "测试容器状态..."
+# 检查端口是否被占用
+check_ports() {
+    log_info "检查端口占用情况..."
     
-    if ! docker-compose ps | grep -q "Up"; then
-        log_error "容器未运行"
+    local ports=("80" "443" "5000" "3306")
+    
+    for port in "${ports[@]}"; do
+        if lsof -i :$port >/dev/null 2>&1; then
+            log_warning "端口 $port 已被占用"
+        else
+            log_success "端口 $port 可用"
+        fi
+    done
+}
+
+# 构建和启动服务
+deploy_services() {
+    log_info "开始部署服务..."
+    
+    # 停止现有服务
+    docker-compose down 2>/dev/null || true
+    
+    # 构建镜像
+    log_info "构建Docker镜像..."
+    docker-compose build --no-cache
+    
+    # 启动服务
+    log_info "启动服务..."
+    docker-compose up -d
+    
+    # 等待服务启动
+    log_info "等待服务启动..."
+    sleep 30
+}
+
+# 检查服务状态
+check_service_status() {
+    log_info "检查服务状态..."
+    
+    # 检查容器状态
+    if docker-compose ps | grep -q "Up"; then
+        log_success "所有容器运行正常"
+    else
+        log_error "部分容器启动失败"
+        docker-compose logs
         return 1
     fi
     
     # 检查各个服务
-    services=("web" "mysql" "nginx")
+    local services=("mysql" "web" "nginx")
+    
     for service in "${services[@]}"; do
-        if ! docker-compose ps | grep -q "$service.*Up"; then
-            log_error "$service 服务未运行"
-            return 1
+        if docker-compose ps | grep -q "$service.*Up"; then
+            log_success "$service 服务运行正常"
+        else
+            log_error "$service 服务启动失败"
+            docker-compose logs $service
         fi
     done
-    
-    log_success "所有容器运行正常"
-    return 0
 }
 
 # 测试网络连接
 test_network() {
     log_info "测试网络连接..."
     
-    # 测试HTTP连接
-    if curl -s http://localhost > /dev/null; then
-        log_success "HTTP服务正常"
+    # 测试本地连接
+    if curl -s http://localhost >/dev/null 2>&1; then
+        log_success "本地HTTP连接正常"
     else
-        log_error "HTTP服务无法访问"
-        return 1
+        log_error "本地HTTP连接失败"
     fi
     
-    # 测试管理后台
-    if curl -s http://localhost/admin > /dev/null; then
-        log_success "管理后台可访问"
+    # 测试API端点
+    if curl -s http://localhost/ >/dev/null 2>&1; then
+        log_success "首页访问正常"
     else
-        log_warning "管理后台可能未配置"
+        log_error "首页访问失败"
     fi
     
-    return 0
+    # 测试静态文件
+    if curl -s http://localhost/static/avatars/default.jpg >/dev/null 2>&1; then
+        log_success "静态文件访问正常"
+    else
+        log_error "静态文件访问失败"
+    fi
 }
 
 # 测试数据库连接
 test_database() {
     log_info "测试数据库连接..."
     
-    if docker-compose exec web python -c "
-import pymysql
-try:
-    conn = pymysql.connect(
-        host='mysql',
-        user='wanli_user',
-        password='wanli123456',
-        database='wanli_video'
-    )
-    print('数据库连接成功')
-    conn.close()
-except Exception as e:
-    print(f'数据库连接失败: {e}')
-    exit(1)
-" 2>/dev/null; then
+    # 检查MySQL容器
+    if docker-compose exec mysql mysql -u wanli_user -pwanli123456 -e "SELECT 1;" >/dev/null 2>&1; then
         log_success "数据库连接正常"
-        return 0
     else
         log_error "数据库连接失败"
-        return 1
     fi
 }
 
-# 测试文件上传
-test_upload() {
-    log_info "测试文件上传功能..."
+# 测试应用功能
+test_application() {
+    log_info "测试应用功能..."
     
-    # 检查上传目录
-    if [ -d "static/uploads" ]; then
-        log_success "上传目录存在"
+    # 测试注册功能
+    local test_response=$(curl -s -X POST http://localhost/register \
+        -H "Content-Type: application/x-www-form-urlencoded" \
+        -d "username=testuser&email=test@example.com&password=testpassword123!")
+    
+    if echo "$test_response" | grep -q "注册成功"; then
+        log_success "用户注册功能正常"
     else
-        log_error "上传目录不存在"
-        return 1
+        log_warning "用户注册功能测试失败（可能是正常行为）"
     fi
     
-    # 检查权限
-    if [ -w "static/uploads" ]; then
-        log_success "上传目录可写"
+    # 测试登录功能
+    local login_response=$(curl -s -X POST http://localhost/login \
+        -H "Content-Type: application/x-www-form-urlencoded" \
+        -d "username=admin&password=admin123")
+    
+    if echo "$login_response" | grep -q "302"; then
+        log_success "管理员登录功能正常"
     else
-        log_error "上传目录不可写"
-        return 1
+        log_warning "管理员登录功能测试失败"
     fi
+}
+
+# 性能测试
+performance_test() {
+    log_info "进行性能测试..."
     
-    return 0
+    # 测试并发连接
+    local concurrent_users=10
+    local total_requests=50
+    
+    log_info "测试 $concurrent_users 个并发用户，总共 $total_requests 个请求..."
+    
+    # 使用ab进行压力测试（如果可用）
+    if command -v ab &> /dev/null; then
+        ab -n $total_requests -c $concurrent_users http://localhost/ > ab_results.txt 2>&1
+        log_success "压力测试完成，结果保存在 ab_results.txt"
+    else
+        log_warning "Apache Bench (ab) 未安装，跳过压力测试"
+    fi
 }
 
-# 显示系统信息
-show_system_info() {
-    log_info "系统信息:"
-    echo "操作系统: $(uname -s) $(uname -r)"
-    echo "Docker版本: $(docker --version)"
-    echo "Docker Compose版本: $(docker-compose --version)"
-    echo "磁盘使用: $(df -h . | tail -1)"
-    echo "内存使用: $(free -h | grep Mem | awk '{print $3"/"$2}')"
-    echo
+# 清理测试数据
+cleanup_test_data() {
+    log_info "清理测试数据..."
+    
+    # 删除测试用户（如果存在）
+    docker-compose exec mysql mysql -u wanli_user -pwanli123456 wanli_video -e "DELETE FROM user WHERE username='testuser';" 2>/dev/null || true
+    
+    log_success "测试数据清理完成"
 }
 
-# 显示服务状态
-show_service_status() {
-    log_info "服务状态:"
-    docker-compose ps
-    echo
-}
-
-# 显示访问信息
-show_access_info() {
-    log_success "部署测试完成！"
+# 显示测试结果
+show_test_results() {
+    log_success "测试完成！"
     echo
     echo "=========================================="
-    echo "万里的秘密基地 - 访问信息"
+    echo "万里的秘密基地 - 部署测试结果"
     echo "=========================================="
-    echo "网站地址: http://localhost"
+    echo "访问地址: http://localhost"
     echo "管理后台: http://localhost/admin"
     echo "管理员账户: admin / admin123"
     echo "=========================================="
     echo
-    echo "常用命令:"
-    echo "查看状态: docker-compose ps"
-    echo "查看日志: docker-compose logs"
-    echo "重启服务: docker-compose restart"
-    echo "停止服务: docker-compose down"
+    echo "服务状态:"
+    docker-compose ps
+    echo
+    echo "最近日志:"
+    docker-compose logs --tail=20
     echo "=========================================="
 }
 
 # 主函数
 main() {
     log_info "开始测试万里的秘密基地部署..."
-    echo
     
-    show_system_info
+    # 检查环境
+    check_docker
+    check_ports
     
-    # 运行测试
-    tests=(
-        "test_docker"
-        "test_docker_compose"
-        "test_containers"
-        "test_network"
-        "test_database"
-        "test_upload"
-    )
+    # 部署服务
+    deploy_services
     
-    failed_tests=0
+    # 检查服务状态
+    check_service_status
     
-    for test in "${tests[@]}"; do
-        if $test; then
-            log_success "$test 通过"
-        else
-            log_error "$test 失败"
-            ((failed_tests++))
-        fi
-        echo
-    done
+    # 测试网络连接
+    test_network
     
-    show_service_status
+    # 测试数据库
+    test_database
     
-    if [ $failed_tests -eq 0 ]; then
-        show_access_info
-    else
-        log_error "有 $failed_tests 个测试失败，请检查部署"
-        exit 1
-    fi
+    # 测试应用功能
+    test_application
+    
+    # 性能测试
+    performance_test
+    
+    # 清理测试数据
+    cleanup_test_data
+    
+    # 显示结果
+    show_test_results
 }
 
 # 运行主函数

@@ -58,7 +58,7 @@ class User(UserMixin, db.Model):
     is_active = db.Column(db.Boolean, default=True)  # 用户是否激活
     password_changed = db.Column(db.Boolean, default=False)  # 是否已修改默认密码
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    videos = db.relationship('Video', backref='author', lazy=True)
+    videos = db.relationship('Video', foreign_keys='Video.user_id', backref='author', lazy=True)
     comments = db.relationship('Comment', backref='author', lazy=True)
 
 class Video(db.Model):
@@ -76,6 +76,9 @@ class Video(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     comments = db.relationship('Comment', backref='video', lazy=True)
+    
+    # 明确指定外键关系
+    reviewer = db.relationship('User', foreign_keys=[reviewed_by], backref='reviewed_videos')
 
 class Comment(db.Model):
     id = db.Column(db.Integer, primary_key=True)

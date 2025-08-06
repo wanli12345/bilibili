@@ -12,6 +12,8 @@ CREATE TABLE IF NOT EXISTS user (
     password_hash VARCHAR(120) NOT NULL,
     avatar VARCHAR(200) DEFAULT 'default.jpg',
     is_admin BOOLEAN DEFAULT FALSE,
+    is_active BOOLEAN DEFAULT TRUE,
+    password_changed BOOLEAN DEFAULT FALSE,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -24,9 +26,14 @@ CREATE TABLE IF NOT EXISTS video (
     thumbnail VARCHAR(200),
     views INT DEFAULT 0,
     likes INT DEFAULT 0,
+    status VARCHAR(20) DEFAULT 'pending',
+    review_comment TEXT,
+    reviewed_by INT,
+    reviewed_at DATETIME,
     user_id INT NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE,
+    FOREIGN KEY (reviewed_by) REFERENCES user(id) ON DELETE SET NULL
 );
 
 -- 创建评论表
@@ -43,10 +50,11 @@ CREATE TABLE IF NOT EXISTS comment (
 -- 创建索引
 CREATE INDEX idx_video_user_id ON video(user_id);
 CREATE INDEX idx_video_created_at ON video(created_at);
+CREATE INDEX idx_video_status ON video(status);
 CREATE INDEX idx_comment_video_id ON comment(video_id);
 CREATE INDEX idx_comment_user_id ON comment(user_id);
 
 -- 插入默认管理员账户
-INSERT INTO user (username, email, password_hash, is_admin) 
-VALUES ('admin', 'admin@wanli.com', 'pbkdf2:sha256:600000$your-hash-here', TRUE)
+INSERT INTO user (username, email, password_hash, is_admin, password_changed) 
+VALUES ('admin', 'admin@wanli.com', 'pbkdf2:sha256:600000$your-hash-here', TRUE, FALSE)
 ON DUPLICATE KEY UPDATE id=id; 
