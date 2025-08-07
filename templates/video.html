@@ -88,6 +88,52 @@
             object-fit: cover;
         }
         
+        /* 弹幕容器 */
+        .danmaku-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 10;
+        }
+        
+        .danmaku {
+            position: absolute;
+            white-space: nowrap;
+            font-size: 20px;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+            pointer-events: none;
+            user-select: none;
+            animation: danmaku-scroll 8s linear;
+        }
+        
+        .danmaku.top {
+            animation: none;
+            top: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        
+        .danmaku.bottom {
+            animation: none;
+            bottom: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        
+        @keyframes danmaku-scroll {
+            from {
+                transform: translateX(100%);
+            }
+            to {
+                transform: translateX(-100%);
+            }
+        }
+        
         .video-info {
             padding: 1.5rem;
         }
@@ -110,9 +156,8 @@
         
         .video-stats {
             display: flex;
-            gap: 2rem;
+            gap: 1rem;
             color: #666;
-            font-size: 0.9rem;
         }
         
         .video-author {
@@ -122,16 +167,221 @@
         }
         
         .author-avatar {
-            width: 32px;
-            height: 32px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
-            background: #ddd;
         }
         
         .video-description {
+            margin-bottom: 2rem;
             color: #666;
             line-height: 1.6;
+        }
+        
+        /* 弹幕发送区域 */
+        .danmaku-send {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+        
+        .danmaku-send h3 {
             margin-bottom: 1rem;
+            color: #333;
+        }
+        
+        .danmaku-form {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .danmaku-input {
+            flex: 1;
+            min-width: 200px;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .danmaku-type {
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .danmaku-color {
+            width: 40px;
+            height: 35px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .danmaku-send-btn {
+            padding: 0.5rem 1rem;
+            background: #00a1d6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .danmaku-send-btn:hover {
+            background: #0091c2;
+        }
+        
+        .danmaku-send-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        /* 三连按钮样式 */
+        .video-actions {
+            margin-top: 1rem;
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .triple-like-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .triple-like-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+        }
+        
+        .triple-like-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .triple-icon {
+            font-size: 16px;
+        }
+        
+        /* 操作按钮样式 */
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .action-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .like-btn {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+        }
+        
+        .coin-btn {
+            background: linear-gradient(45deg, #ffd700, #ffb347);
+            color: white;
+        }
+        
+        .follow-btn {
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            color: white;
+        }
+        
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .action-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .btn-icon {
+            font-size: 16px;
+        }
+        
+        /* 投币模态框样式 */
+        .coin-submit-btn {
+            padding: 0.5rem 1rem;
+            background: linear-gradient(45deg, #ffd700, #ffb347);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .coin-submit-btn:hover {
+            background: linear-gradient(45deg, #ffb347, #ffd700);
+        }
+        
+        /* 三连特效 */
+        @keyframes tripleEffect {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        
+        .triple-effect {
+            animation: tripleEffect 0.5s ease;
+        }
+        
+        .fireworks {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+            pointer-events: none;
+        }
+        
+        .firework {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            animation: firework 1s ease-out forwards;
+        }
+        
+        @keyframes firework {
+            0% {
+                transform: translate(0, 0) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(var(--x), var(--y)) scale(0);
+                opacity: 0;
+            }
         }
         
         /* 评论区域 */
@@ -142,57 +392,43 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
         
-        .comments-header {
-            font-size: 1.2rem;
-            font-weight: bold;
+        .comments-section h3 {
             margin-bottom: 1rem;
             color: #333;
         }
         
         .comment-form {
             margin-bottom: 2rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid #eee;
         }
         
-        .comment-input {
+        .comment-textarea {
             width: 100%;
-            padding: 12px;
-            border: 2px solid #ddd;
-            border-radius: 5px;
-            font-size: 1rem;
+            padding: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
             resize: vertical;
-            min-height: 80px;
-            transition: border-color 0.3s;
-        }
-        
-        .comment-input:focus {
-            outline: none;
-            border-color: #00a1d6;
+            min-height: 100px;
+            font-family: inherit;
+            font-size: 14px;
         }
         
         .comment-submit {
+            margin-top: 1rem;
+            padding: 0.5rem 1rem;
             background: #00a1d6;
             color: white;
-            padding: 8px 20px;
             border: none;
-            border-radius: 5px;
+            border-radius: 4px;
             cursor: pointer;
-            margin-top: 0.5rem;
-            transition: background 0.3s;
+            font-size: 14px;
         }
         
         .comment-submit:hover {
-            background: #0088b3;
-        }
-        
-        .comment-submit:disabled {
-            background: #ccc;
-            cursor: not-allowed;
+            background: #0091c2;
         }
         
         .comments-list {
-            margin-top: 1rem;
+            margin-top: 2rem;
         }
         
         .comment-item {
@@ -252,13 +488,22 @@
             .video-stats {
                 gap: 1rem;
             }
+            
+            .danmaku-form {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .danmaku-input {
+                min-width: auto;
+            }
         }
     </style>
 </head>
 <body>
     <nav>
         <div class="container">
-            <a href="/" class="logo">个人B站</a>
+            <a href="/" class="logo">万里的秘密基地</a>
             <ul class="nav-links">
                 {% if current_user.is_authenticated %}
                     <li><a href="/upload">上传视频</a></li>
@@ -278,10 +523,11 @@
     <div class="container">
         <div class="video-container">
             <div class="video-player">
-                <video controls>
+                <video id="videoPlayer" controls>
                     <source src="/static/uploads/{{ video.filename }}" type="video/mp4">
                     您的浏览器不支持视频播放。
                 </video>
+                <div id="danmakuContainer" class="danmaku-container"></div>
             </div>
             
             <div class="video-info">
@@ -291,12 +537,48 @@
                     <div class="video-stats">
                         <span>{{ video.views }} 播放</span>
                         <span>{{ video.likes }} 点赞</span>
+                        <span>{{ video.triple_likes }} 三连</span>
                         <span>{{ video.created_at.strftime('%Y-%m-%d') }}</span>
                     </div>
                     
                     <div class="video-author">
                         <img src="/static/avatars/{{ video.author.avatar }}" alt="作者头像" class="author-avatar">
                         <span>{{ video.author.username }}</span>
+                    </div>
+                </div>
+                
+                <div class="video-actions">
+                    <div class="action-buttons">
+                        <button id="likeBtn" class="action-btn like-btn" onclick="likeUser()">
+                            <span class="btn-icon">👍</span>
+                            点赞
+                        </button>
+                        <button id="coinBtn" class="action-btn coin-btn" onclick="showCoinModal()">
+                            <span class="btn-icon">🪙</span>
+                            投币
+                        </button>
+                        <button id="followBtn" class="action-btn follow-btn" onclick="followUser()">
+                            <span class="btn-icon">👁️</span>
+                            关注
+                        </button>
+                    </div>
+                    <button id="tripleLikeBtn" class="triple-like-btn" onclick="tripleLike()">
+                        <span class="triple-icon">🎉</span>
+                        一键三连
+                    </button>
+                </div>
+                
+                <!-- 投币模态框 -->
+                <div id="coinModal" class="modal">
+                    <div class="modal-content">
+                        <span class="close" onclick="closeCoinModal()">&times;</span>
+                        <h3>投币给 {{ video.author.username }}</h3>
+                        <p>您当前有 <span id="myCoins">{{ current_user.wanli_coins if current_user.is_authenticated else 0 }}</span> 个万里币</p>
+                        <div class="form-group">
+                            <label for="coinAmount">投币数量:</label>
+                            <input type="number" id="coinAmount" min="1" max="{{ current_user.wanli_coins if current_user.is_authenticated else 0 }}" value="1">
+                        </div>
+                        <button onclick="coinUser()" class="coin-submit-btn">确认投币</button>
                     </div>
                 </div>
                 
@@ -308,18 +590,35 @@
             </div>
         </div>
         
+        <!-- 弹幕发送区域 -->
+        {% if current_user.is_authenticated %}
+            <div class="danmaku-send">
+                <h3>发送弹幕</h3>
+                <div class="danmaku-form">
+                    <input type="text" id="danmakuInput" class="danmaku-input" placeholder="输入弹幕内容..." maxlength="50">
+                    <select id="danmakuType" class="danmaku-type">
+                        <option value="scroll">滚动弹幕</option>
+                        <option value="top">顶部弹幕</option>
+                        <option value="bottom">底部弹幕</option>
+                    </select>
+                    <input type="color" id="danmakuColor" class="danmaku-color" value="#ffffff">
+                    <button id="danmakuSendBtn" class="danmaku-send-btn">发送弹幕</button>
+                </div>
+            </div>
+        {% else %}
+            <div class="login-prompt">
+                <p>请 <a href="/login">登录</a> 后发送弹幕</p>
+            </div>
+        {% endif %}
+        
+        <!-- 评论区域 -->
         <div class="comments-section">
-            <h3 class="comments-header">评论 ({{ comments|length }})</h3>
+            <h3>评论</h3>
             
             {% if current_user.is_authenticated %}
                 <div class="comment-form">
-                    <textarea 
-                        class="comment-input" 
-                        placeholder="写下你的评论..." 
-                        id="commentInput"
-                        maxlength="500"
-                    ></textarea>
-                    <button class="comment-submit" id="commentSubmit">发表评论</button>
+                    <textarea id="commentTextarea" class="comment-textarea" placeholder="写下你的评论..."></textarea>
+                    <button id="commentSubmitBtn" class="comment-submit">发表评论</button>
                 </div>
             {% else %}
                 <div class="login-prompt">
@@ -327,7 +626,7 @@
                 </div>
             {% endif %}
             
-            <div class="comments-list" id="commentsList">
+            <div id="commentsList" class="comments-list">
                 {% for comment in comments %}
                     <div class="comment-item">
                         <div class="comment-header">
@@ -340,81 +639,378 @@
             </div>
         </div>
     </div>
-    
+
     <script>
-        // 评论提交功能
-        const commentInput = document.getElementById('commentInput');
-        const commentSubmit = document.getElementById('commentSubmit');
+        const video = document.getElementById('videoPlayer');
+        const danmakuContainer = document.getElementById('danmakuContainer');
+        const danmakuInput = document.getElementById('danmakuInput');
+        const danmakuType = document.getElementById('danmakuType');
+        const danmakuColor = document.getElementById('danmakuColor');
+        const danmakuSendBtn = document.getElementById('danmakuSendBtn');
+        const commentTextarea = document.getElementById('commentTextarea');
+        const commentSubmitBtn = document.getElementById('commentSubmitBtn');
         const commentsList = document.getElementById('commentsList');
         
-        if (commentSubmit) {
-            commentSubmit.addEventListener('click', function() {
-                const content = commentInput.value.trim();
-                if (!content) {
-                    alert('请输入评论内容');
-                    return;
-                }
-                
-                commentSubmit.disabled = true;
-                commentSubmit.textContent = '发送中...';
-                
-                const formData = new FormData();
-                formData.append('content', content);
-                formData.append('video_id', '{{ video.id }}');
-                
-                fetch('/comment', {
-                    method: 'POST',
-                    body: formData
-                })
+        let danmakus = [];
+        let isLoggedIn = {{ 'true' if current_user.is_authenticated else 'false' }};
+        
+        // 加载弹幕
+        function loadDanmakus() {
+            fetch(`/danmaku/{{ video.id }}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.status === 'success') {
-                        // 添加新评论到列表
-                        const commentHtml = `
-                            <div class="comment-item">
-                                <div class="comment-header">
-                                    <span class="comment-author">${data.comment.author}</span>
-                                    <span class="comment-time">${data.comment.created_at}</span>
-                                </div>
-                                <div class="comment-content">${data.comment.content}</div>
-                            </div>
-                        `;
-                        commentsList.insertAdjacentHTML('afterbegin', commentHtml);
-                        
-                        // 清空输入框
-                        commentInput.value = '';
-                        
-                        // 更新评论数量
-                        const commentsHeader = document.querySelector('.comments-header');
-                        const currentCount = parseInt(commentsHeader.textContent.match(/\d+/)[0]);
-                        commentsHeader.textContent = `评论 (${currentCount + 1})`;
-                    } else {
-                        alert(data.message || '评论发送失败');
+                        danmakus = data.danmakus;
                     }
-                })
-                .catch(error => {
-                    alert('评论发送失败，请稍后重试');
-                })
-                .finally(() => {
-                    commentSubmit.disabled = false;
-                    commentSubmit.textContent = '发表评论';
                 });
+        }
+        
+        // 创建弹幕元素
+        function createDanmakuElement(danmaku) {
+            const danmakuEl = document.createElement('div');
+            danmakuEl.className = `danmaku ${danmaku.type}`;
+            danmakuEl.textContent = danmaku.content;
+            danmakuEl.style.color = danmaku.color;
+            
+            if (danmaku.type === 'scroll') {
+                danmakuEl.style.top = Math.random() * 60 + 10 + '%';
+            }
+            
+            return danmakuEl;
+        }
+        
+        // 显示弹幕
+        function showDanmaku(danmaku) {
+            const danmakuEl = createDanmakuElement(danmaku);
+            danmakuContainer.appendChild(danmakuEl);
+            
+            // 滚动弹幕动画结束后移除元素
+            if (danmaku.type === 'scroll') {
+                setTimeout(() => {
+                    if (danmakuEl.parentNode) {
+                        danmakuEl.parentNode.removeChild(danmakuEl);
+                    }
+                }, 8000);
+            } else {
+                // 顶部和底部弹幕显示3秒后移除
+                setTimeout(() => {
+                    if (danmakuEl.parentNode) {
+                        danmakuEl.parentNode.removeChild(danmakuEl);
+                    }
+                }, 3000);
+            }
+        }
+        
+        // 发送弹幕
+        function sendDanmaku() {
+            if (!isLoggedIn) {
+                alert('请先登录');
+                return;
+            }
+            
+            const content = danmakuInput.value.trim();
+            if (!content) {
+                alert('请输入弹幕内容');
+                return;
+            }
+            
+            if (content.length > 50) {
+                alert('弹幕内容不能超过50个字符');
+                return;
+            }
+            
+            const currentTime = video.currentTime;
+            const type = danmakuType.value;
+            const color = danmakuColor.value;
+            
+            const formData = new FormData();
+            formData.append('content', content);
+            formData.append('video_id', '{{ video.id }}');
+            formData.append('time', currentTime);
+            formData.append('type', type);
+            formData.append('color', color);
+            
+            fetch('/danmaku', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    danmakuInput.value = '';
+                    showDanmaku(data.danmaku);
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('发送弹幕失败:', error);
+                alert('发送弹幕失败');
             });
         }
         
-        // 字符计数
-        if (commentInput) {
-            commentInput.addEventListener('input', function() {
-                const maxLength = 500;
-                const currentLength = this.value.length;
-                const remaining = maxLength - currentLength;
-                
-                if (remaining < 50) {
-                    this.style.borderColor = '#ff6b6b';
+        // 发送评论
+        function sendComment() {
+            if (!isLoggedIn) {
+                alert('请先登录');
+                return;
+            }
+            
+            const content = commentTextarea.value.trim();
+            if (!content) {
+                alert('请输入评论内容');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('content', content);
+            formData.append('video_id', '{{ video.id }}');
+            
+            fetch('/comment', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    commentTextarea.value = '';
+                    
+                    // 添加新评论到列表
+                    const commentItem = document.createElement('div');
+                    commentItem.className = 'comment-item';
+                    commentItem.innerHTML = `
+                        <div class="comment-header">
+                            <span class="comment-author">${data.comment.author}</span>
+                            <span class="comment-time">${data.comment.created_at}</span>
+                        </div>
+                        <div class="comment-content">${data.comment.content}</div>
+                    `;
+                    commentsList.insertBefore(commentItem, commentsList.firstChild);
                 } else {
-                    this.style.borderColor = '#ddd';
+                    alert(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('发送评论失败:', error);
+                alert('发送评论失败');
+            });
+        }
+        
+        // 事件监听
+        if (danmakuSendBtn) {
+            danmakuSendBtn.addEventListener('click', sendDanmaku);
+            danmakuInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendDanmaku();
                 }
             });
+        }
+        
+        if (commentSubmitBtn) {
+            commentSubmitBtn.addEventListener('click', sendComment);
+        }
+        
+        // 视频播放时显示弹幕
+        video.addEventListener('timeupdate', function() {
+            const currentTime = video.currentTime;
+            danmakus.forEach(danmaku => {
+                if (Math.abs(danmaku.time - currentTime) < 0.5 && !danmaku.shown) {
+                    danmaku.shown = true;
+                    showDanmaku(danmaku);
+                }
+            });
+        });
+        
+        // 页面加载时获取弹幕
+        loadDanmakus();
+        
+        // 点赞功能
+        function likeUser() {
+            if (!isLoggedIn) {
+                alert('请先登录');
+                return;
+            }
+            
+            fetch(`/like_user/{{ video.author.id }}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert(data.message);
+                    document.getElementById('likeBtn').disabled = true;
+                    document.getElementById('likeBtn').textContent = '已点赞';
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('点赞失败:', error);
+                alert('点赞失败，请稍后重试');
+            });
+        }
+        
+        // 显示投币模态框
+        function showCoinModal() {
+            if (!isLoggedIn) {
+                alert('请先登录');
+                return;
+            }
+            document.getElementById('coinModal').style.display = 'block';
+        }
+        
+        // 关闭投币模态框
+        function closeCoinModal() {
+            document.getElementById('coinModal').style.display = 'none';
+        }
+        
+        // 投币功能
+        function coinUser() {
+            const amount = parseInt(document.getElementById('coinAmount').value);
+            if (!amount || amount <= 0) {
+                alert('请输入有效的投币数量');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('amount', amount);
+            
+            fetch(`/coin_user/{{ video.author.id }}`, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert(data.message);
+                    document.getElementById('myCoins').textContent = data.my_coins;
+                    closeCoinModal();
+                    document.getElementById('coinBtn').disabled = true;
+                    document.getElementById('coinBtn').textContent = '已投币';
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('投币失败:', error);
+                alert('投币失败，请稍后重试');
+            });
+        }
+        
+        // 关注功能
+        function followUser() {
+            if (!isLoggedIn) {
+                alert('请先登录');
+                return;
+            }
+            
+            fetch(`/follow_user/{{ video.author.id }}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert(data.message);
+                    const btn = document.getElementById('followBtn');
+                    if (data.is_following) {
+                        btn.textContent = '已关注';
+                        btn.style.background = '#ccc';
+                    } else {
+                        btn.textContent = '关注';
+                        btn.style.background = 'linear-gradient(45deg, #4ecdc4, #44a08d)';
+                    }
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('关注失败:', error);
+                alert('关注失败，请稍后重试');
+            });
+        }
+        
+        // 创建烟花特效
+        function createFireworks() {
+            const fireworks = document.createElement('div');
+            fireworks.className = 'fireworks';
+            document.body.appendChild(fireworks);
+            
+            const colors = ['#ff6b6b', '#ffd700', '#4ecdc4', '#ffb347', '#ee5a24'];
+            
+            for (let i = 0; i < 20; i++) {
+                const firework = document.createElement('div');
+                firework.className = 'firework';
+                firework.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                firework.style.setProperty('--x', `${(Math.random() - 0.5) * 200}px`);
+                firework.style.setProperty('--y', `${(Math.random() - 0.5) * 200}px`);
+                fireworks.appendChild(firework);
+            }
+            
+            setTimeout(() => {
+                document.body.removeChild(fireworks);
+            }, 1000);
+        }
+        
+        // 三连功能
+        function tripleLike() {
+            if (!isLoggedIn) {
+                alert('请先登录');
+                return;
+            }
+            
+            const btn = document.getElementById('tripleLikeBtn');
+            btn.disabled = true;
+            
+            // 添加特效
+            btn.classList.add('triple-effect');
+            createFireworks();
+            
+            // 执行三个操作
+            Promise.all([
+                fetch(`/like_user/{{ video.author.id }}`, { method: 'POST' }),
+                fetch(`/coin_user/{{ video.author.id }}`, { 
+                    method: 'POST', 
+                    body: new FormData().append('amount', 1)
+                }),
+                fetch(`/follow_user/{{ video.author.id }}`, { method: 'POST' }),
+                fetch(`/triple_like/{{ video.id }}`, { method: 'POST' })
+            ])
+            .then(responses => Promise.all(responses.map(r => r.json())))
+            .then(results => {
+                alert('一键三连成功！🎉');
+                // 更新按钮状态
+                document.getElementById('likeBtn').disabled = true;
+                document.getElementById('likeBtn').textContent = '已点赞';
+                document.getElementById('coinBtn').disabled = true;
+                document.getElementById('coinBtn').textContent = '已投币';
+                document.getElementById('followBtn').textContent = '已关注';
+                document.getElementById('followBtn').style.background = '#ccc';
+                btn.textContent = '已三连';
+                btn.style.background = '#ccc';
+                
+                // 更新显示的三连数量
+                const stats = document.querySelector('.video-stats');
+                const tripleSpan = stats.querySelector('span:nth-child(3)');
+                if (tripleSpan) {
+                    const currentLikes = parseInt(tripleSpan.textContent) || 0;
+                    tripleSpan.textContent = `${currentLikes + 1} 三连`;
+                }
+            })
+            .catch(error => {
+                console.error('三连失败:', error);
+                alert('三连失败，请稍后重试');
+                btn.disabled = false;
+            });
+            
+            setTimeout(() => {
+                btn.classList.remove('triple-effect');
+            }, 500);
         }
     </script>
 </body>

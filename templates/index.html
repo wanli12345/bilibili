@@ -370,6 +370,99 @@
         .video-card:nth-child(4) { animation-delay: 0.4s; }
         .video-card:nth-child(5) { animation-delay: 0.5s; }
         .video-card:nth-child(6) { animation-delay: 0.6s; }
+        
+        /* 模态框样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        
+        .modal-content {
+            background: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .close:hover {
+            color: #000;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .login-btn, .register-submit-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+        
+        .login-btn:hover, .register-submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .register-btn, .back-to-login-btn {
+            width: 100%;
+            padding: 12px;
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .register-btn:hover, .back-to-login-btn:hover {
+            background: rgba(102, 126, 234, 0.2);
+        }
     </style>
 </head>
 <body>
@@ -397,9 +490,10 @@
             </div>
             <div class="user-menu">
                 {% if current_user.is_authenticated %}
-                    <img src="/static/avatars/{{ current_user.avatar }}" alt="头像" class="user-avatar">
+                    <img src="/static/avatars/{{ current_user.avatar }}" alt="头像" class="user-avatar" onclick="handleAvatarClick()" style="cursor: pointer;">
                     <a href="/logout">退出</a>
                 {% else %}
+                    <img src="/static/avatars/牛.png" alt="头像" class="user-avatar" onclick="handleAvatarClick()" style="cursor: pointer;">
                     <a href="/login">登录</a>
                     <a href="/register">注册</a>
                 {% endif %}
@@ -427,17 +521,17 @@
                 <div class="video-grid">
                     {% for video in videos %}
                         <div class="video-card">
-                            <a href="/video/{{ video.id }}">
+                            <a href="javascript:void(0)" onclick="handleVideoClick({{ video.id }})">
                                 <div class="video-thumbnail">
                                     {% if video.thumbnail %}
                                         <img src="/static/thumbnails/{{ video.thumbnail }}" alt="{{ video.title }}">
                                     {% else %}
-                                        <img src="/static/thumbnails/default.jpg" alt="{{ video.title }}">
+                                        <img src="/static/thumbnails/壁纸.png" alt="{{ video.title }}">
                                     {% endif %}
                                 </div>
                             </a>
                             <div class="video-info">
-                                <a href="/video/{{ video.id }}" style="text-decoration: none;">
+                                <a href="javascript:void(0)" onclick="handleVideoClick({{ video.id }})" style="text-decoration: none;">
                                     <h3 class="video-title">{{ video.title }}</h3>
                                 </a>
                                 <div class="video-meta">
@@ -458,5 +552,155 @@
             {% endif %}
         </div>
     </div>
+    
+    <!-- 登录模态框 -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeLoginModal()">&times;</span>
+            <h2>登录</h2>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username">用户名</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">密码</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <button type="submit" class="login-btn">登录</button>
+                <button type="button" class="register-btn" onclick="showRegisterModal()">注册新账户</button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- 注册模态框 -->
+    <div id="registerModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeRegisterModal()">&times;</span>
+            <h2>注册</h2>
+            <form id="registerForm">
+                <div class="form-group">
+                    <label for="regUsername">用户名</label>
+                    <input type="text" id="regUsername" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="regEmail">邮箱</label>
+                    <input type="email" id="regEmail" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="regPassword">密码</label>
+                    <input type="password" id="regPassword" name="password" required>
+                </div>
+                <button type="submit" class="register-submit-btn">注册</button>
+                <button type="button" class="back-to-login-btn" onclick="showLoginModal()">返回登录</button>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        const isLoggedIn = {{ 'true' if current_user.is_authenticated else 'false' }};
+        
+        // 处理视频点击
+        function handleVideoClick(videoId) {
+            if (!isLoggedIn) {
+                showLoginModal();
+            } else {
+                window.location.href = `/video/${videoId}`;
+            }
+        }
+        
+        // 处理头像点击
+        function handleAvatarClick() {
+            if (!isLoggedIn) {
+                showLoginModal();
+            } else {
+                window.location.href = '/profile';
+            }
+        }
+        
+        // 显示登录模态框
+        function showLoginModal() {
+            document.getElementById('loginModal').style.display = 'block';
+        }
+        
+        // 关闭登录模态框
+        function closeLoginModal() {
+            document.getElementById('loginModal').style.display = 'none';
+        }
+        
+        // 显示注册模态框
+        function showRegisterModal() {
+            document.getElementById('loginModal').style.display = 'none';
+            document.getElementById('registerModal').style.display = 'block';
+        }
+        
+        // 关闭注册模态框
+        function closeRegisterModal() {
+            document.getElementById('registerModal').style.display = 'none';
+        }
+        
+        // 登录表单提交
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            
+            fetch('/login', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (response.redirected) {
+                    window.location.href = response.url;
+                } else {
+                    return response.text();
+                }
+            })
+            .then(data => {
+                if (data) {
+                    alert('登录失败，请检查用户名和密码');
+                }
+            })
+            .catch(error => {
+                console.error('登录失败:', error);
+                alert('登录失败，请稍后重试');
+            });
+        });
+        
+        // 注册表单提交
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            
+            fetch('/register', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (response.redirected) {
+                    alert('注册成功！请登录');
+                    closeRegisterModal();
+                    showLoginModal();
+                } else {
+                    return response.text();
+                }
+            })
+            .then(data => {
+                if (data) {
+                    alert('注册失败，请检查输入信息');
+                }
+            })
+            .catch(error => {
+                console.error('注册失败:', error);
+                alert('注册失败，请稍后重试');
+            });
+        });
+        
+        // 点击模态框外部关闭
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        }
+    </script>
 </body>
 </html>

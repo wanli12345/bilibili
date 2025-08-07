@@ -160,6 +160,17 @@
             color: #666;
         }
         
+        .clickable {
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .clickable:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 161, 214, 0.3);
+            background: #e3f2fd;
+        }
+        
         .profile-actions {
             display: flex;
             flex-direction: column;
@@ -377,6 +388,22 @@
                 </div>
                 
                 <div class="profile-stats">
+                    <div class="stat-item">
+                        <div class="stat-number">{{ current_user.wanli_coins }}</div>
+                        <div class="stat-label">万里币</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">{{ current_user.received_likes }}</div>
+                        <div class="stat-label">收到的赞</div>
+                    </div>
+                    <div class="stat-item clickable" onclick="window.location.href='/following'">
+                        <div class="stat-number">{{ current_user.following.count() }}</div>
+                        <div class="stat-label">关注数</div>
+                    </div>
+                    <div class="stat-item clickable" onclick="window.location.href='/followers'">
+                        <div class="stat-number">{{ current_user.followers.count() }}</div>
+                        <div class="stat-label">粉丝数</div>
+                    </div>
                     <div class="stat-item">
                         <div class="stat-number">{{ pending_videos|length + approved_videos|length + rejected_videos|length }}</div>
                         <div class="stat-label">总视频数</div>

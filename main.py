@@ -47,19 +47,37 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
+# 关注关系表
+follows = db.Table('follows',
+    db.Column('follower_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
+    db.Column('followed_id', db.Integer, db.ForeignKey('user.id'), primary_key=True)
+)
+
 # 数据模型
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(120), nullable=False)
-    avatar = db.Column(db.String(200), default='default.jpg')
+    avatar = db.Column(db.String(200), default='牛.png')
     is_admin = db.Column(db.Boolean, default=False)
     is_active = db.Column(db.Boolean, default=True)  # 用户是否激活
     password_changed = db.Column(db.Boolean, default=False)  # 是否已修改默认密码
+    wanli_coins = db.Column(db.Integer, default=10)  # 万里币，新用户默认10个
+    received_likes = db.Column(db.Integer, default=0)  # 收到的赞数量
+    last_login_date = db.Column(db.Date)  # 最后登录日期
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     videos = db.relationship('Video', foreign_keys='Video.user_id', backref='author', lazy=True)
     comments = db.relationship('Comment', backref='author', lazy=True)
+    
+    # 关注关系
+    following = db.relationship(
+        'User', secondary='follows',
+        primaryjoin='User.id == follows.c.follower_id',
+        secondaryjoin='User.id == follows.c.followed_id',
+        backref=db.backref('followers', lazy='dynamic'),
+        lazy='dynamic'
+    )
 
 class Video(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -77,6 +95,10 @@ class Video(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     comments = db.relationship('Comment', backref='video', lazy=True)
     
+    # 三连功能
+    triple_likes = db.Column(db.Integer, default=0)  # 三连数量
+    triple_users = db.Column(db.Text, default='[]')  # 已三连的用户ID列表（JSON格式）
+    
     # 明确指定外键关系
     reviewer = db.relationship('User', foreign_keys=[reviewed_by], backref='reviewed_videos')
 
@@ -86,6 +108,19 @@ class Comment(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     video_id = db.Column(db.Integer, db.ForeignKey('video.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class Danmaku(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    content = db.Column(db.Text, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    video_id = db.Column(db.Integer, db.ForeignKey('video.id'), nullable=False)
+    time = db.Column(db.Float, nullable=False)  # 弹幕出现的时间点（秒）
+    type = db.Column(db.String(20), default='scroll')  # 弹幕类型：scroll(滚动), top(顶部), bottom(底部)
+    color = db.Column(db.String(7), default='#ffffff')  # 弹幕颜色
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # 添加关系
+    author = db.relationship('User', backref='danmakus')
 
 def validate_password(password):
     """验证密码强度"""
@@ -121,6 +156,16 @@ def login():
         user = User.query.filter_by(username=username).first()
         
         if user and check_password_hash(user.password_hash, password):
+            # 检查每日登录奖励
+            today = datetime.now().date()
+            if user.last_login_date != today:
+                user.wanli_coins += 1
+                user.last_login_date = today
+                db.session.commit()
+                flash(f'欢迎{user.username}同学的到来！获得1万里币奖励！')
+            else:
+                flash(f'欢迎{user.username}同学的到来！')
+            
             if user.is_admin and not user.password_changed:
                 # 管理员首次登录，重定向到修改密码页面
                 login_user(user)
@@ -151,7 +196,8 @@ def register():
         user = User(
             username=username,
             email=email,
-            password_hash=generate_password_hash(password)
+            password_hash=generate_password_hash(password),
+            wanli_coins=10  # 新用户默认10个万里币
         )
         db.session.add(user)
         db.session.commit()
@@ -278,6 +324,157 @@ def add_comment():
         })
     
     return jsonify({'status': 'error', 'message': '评论内容不能为空'})
+
+@app.route('/danmaku', methods=['POST'])
+@login_required
+def add_danmaku():
+    content = request.form.get('content')
+    video_id = request.form.get('video_id')
+    time = request.form.get('time')
+    danmaku_type = request.form.get('type', 'scroll')
+    color = request.form.get('color', '#ffffff')
+    
+    if content and video_id and time:
+        try:
+            time_float = float(time)
+            danmaku = Danmaku(
+                content=content,
+                user_id=current_user.id,
+                video_id=video_id,
+                time=time_float,
+                type=danmaku_type,
+                color=color
+            )
+            db.session.add(danmaku)
+            db.session.commit()
+            
+            return jsonify({
+                'status': 'success',
+                'danmaku': {
+                    'id': danmaku.id,
+                    'content': danmaku.content,
+                    'author': danmaku.author.username,
+                    'time': danmaku.time,
+                    'type': danmaku.type,
+                    'color': danmaku.color
+                }
+            })
+        except ValueError:
+            return jsonify({'status': 'error', 'message': '时间格式错误'})
+    
+    return jsonify({'status': 'error', 'message': '弹幕内容不能为空'})
+
+@app.route('/danmaku/<int:video_id>')
+def get_danmaku(video_id):
+    danmakus = Danmaku.query.filter_by(video_id=video_id).order_by(Danmaku.time).all()
+    return jsonify({
+        'status': 'success',
+        'danmakus': [{
+            'id': d.id,
+            'content': d.content,
+            'author': d.author.username,
+            'time': d.time,
+            'type': d.type,
+            'color': d.color
+        } for d in danmakus]
+    })
+
+@app.route('/like_user/<int:user_id>', methods=['POST'])
+@login_required
+def like_user(user_id):
+    """点赞用户"""
+    if current_user.id == user_id:
+        return jsonify({'status': 'error', 'message': '不能给自己点赞'})
+    
+    target_user = User.query.get_or_404(user_id)
+    target_user.received_likes += 1
+    db.session.commit()
+    
+    return jsonify({
+        'status': 'success',
+        'message': '点赞成功！',
+        'received_likes': target_user.received_likes
+    })
+
+@app.route('/coin_user/<int:user_id>', methods=['POST'])
+@login_required
+def coin_user(user_id):
+    """投币给用户"""
+    if current_user.id == user_id:
+        return jsonify({'status': 'error', 'message': '不能给自己投币'})
+    
+    coin_amount = request.form.get('amount', type=int)
+    if not coin_amount or coin_amount <= 0:
+        return jsonify({'status': 'error', 'message': '投币数量必须大于0'})
+    
+    if current_user.wanli_coins < coin_amount:
+        return jsonify({'status': 'error', 'message': f'万里币不足！您只有{current_user.wanli_coins}个万里币'})
+    
+    target_user = User.query.get_or_404(user_id)
+    
+    # 转移万里币
+    current_user.wanli_coins -= coin_amount
+    target_user.wanli_coins += coin_amount
+    db.session.commit()
+    
+    return jsonify({
+        'status': 'success',
+        'message': f'投币成功！投出{coin_amount}个万里币',
+        'my_coins': current_user.wanli_coins,
+        'target_coins': target_user.wanli_coins
+    })
+
+@app.route('/follow_user/<int:user_id>', methods=['POST'])
+@login_required
+def follow_user(user_id):
+    """关注用户"""
+    if current_user.id == user_id:
+        return jsonify({'status': 'error', 'message': '不能关注自己'})
+    
+    target_user = User.query.get_or_404(user_id)
+    
+    if current_user.following.filter_by(id=user_id).first():
+        # 取消关注
+        current_user.following.remove(target_user)
+        db.session.commit()
+        return jsonify({
+            'status': 'success',
+            'message': '取消关注成功',
+            'is_following': False
+        })
+    else:
+        # 关注
+        current_user.following.append(target_user)
+        db.session.commit()
+        return jsonify({
+            'status': 'success',
+            'message': '关注成功',
+            'is_following': True
+        })
+
+@app.route('/triple_like/<int:video_id>', methods=['POST'])
+@login_required
+def triple_like(video_id):
+    """三连功能"""
+    import json
+    
+    video = Video.query.get_or_404(video_id)
+    triple_users = json.loads(video.triple_users)
+    
+    if current_user.id in triple_users:
+        return jsonify({'status': 'error', 'message': '您已经三连过了'})
+    
+    # 添加三连
+    triple_users.append(current_user.id)
+    video.triple_likes += 1
+    video.triple_users = json.dumps(triple_users)
+    db.session.commit()
+    
+    return jsonify({
+        'status': 'success',
+        'message': '三连成功！',
+        'triple_likes': video.triple_likes
+    })
 
 @app.route('/admin')
 @login_required
@@ -418,6 +615,20 @@ def profile():
                          pending_videos=pending_videos,
                          approved_videos=approved_videos,
                          rejected_videos=rejected_videos)
+
+@app.route('/following')
+@login_required
+def following():
+    """关注列表页面"""
+    following_users = current_user.following.all()
+    return render_template('following.html', following_users=following_users)
+
+@app.route('/followers')
+@login_required
+def followers():
+    """粉丝列表页面"""
+    followers_users = current_user.followers.all()
+    return render_template('followers.html', followers_users=followers_users)
 
 @app.route('/upload_avatar', methods=['POST'])
 @login_required
