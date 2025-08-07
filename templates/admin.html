@@ -436,6 +436,7 @@
                                 <th>上传者</th>
                                 <th>审核时间</th>
                                 <th>状态</th>
+                                <th>操作</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -445,6 +446,9 @@
                                 <td>{{ video.author.username }}</td>
                                 <td>{{ video.reviewed_at.strftime('%Y-%m-%d %H:%M') if video.reviewed_at else 'N/A' }}</td>
                                 <td><span class="status-approved">已通过</span></td>
+                                <td>
+                                    <button class="btn btn-primary" onclick="viewVideo({{ video.id }})">查看</button>
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -465,6 +469,7 @@
                                 <th>上传者</th>
                                 <th>拒绝时间</th>
                                 <th>拒绝原因</th>
+                                <th>操作</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -474,6 +479,9 @@
                                 <td>{{ video.author.username }}</td>
                                 <td>{{ video.reviewed_at.strftime('%Y-%m-%d %H:%M') if video.reviewed_at else 'N/A' }}</td>
                                 <td>{{ video.review_comment or '无' }}</td>
+                                <td>
+                                    <button class="btn btn-primary" onclick="viewVideo({{ video.id }})">查看</button>
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -577,6 +585,11 @@
             document.getElementById('videoId').value = videoId;
             document.getElementById('reviewAction').value = action;
             document.getElementById('reviewModal').style.display = 'block';
+        }
+
+        function viewVideo(videoId) {
+            // 在新窗口中打开视频页面
+            window.open(`/video/${videoId}`, '_blank');
         }
 
         function editUser(userId, username, email, isActive) {
