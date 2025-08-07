@@ -1,10 +1,81 @@
-# Python-generated files
+# Python
 __pycache__/
-*.py[oc]
+*.py[cod]
+*$py.class
+*.so
+.Python
 build/
+develop-eggs/
 dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
 wheels/
-*.egg-info
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
 
-# Virtual environments
+# Virtual Environment
+.env
 .venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+instance/
+
+# Large files
+static/uploads/*.mp4
+static/uploads/*.avi
+static/uploads/*.mov
+static/uploads/*.mkv
+static/uploads/*.wmv
+static/uploads/*.flv
+static/uploads/*.webm
+static/uploads/*.m4v
+static/uploads/*.3gp
+static/uploads/*.mpg
+static/uploads/*.mpeg
+
+# Logs
+*.log
+logs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# SSL certificates
+*.pem
+*.key
+*.crt
+*.csr
