@@ -56,5 +56,5 @@ CREATE INDEX idx_comment_user_id ON comment(user_id);
 
 -- 插入默认管理员账户
 INSERT INTO user (username, email, password_hash, is_admin, password_changed) 
-VALUES ('admin', 'admin@wanli.com', 'pbkdf2:sha256:600000$your-hash-here', TRUE, FALSE)
+VALUES ('admin', 'admin@wanli.com', 'pbkdf2:sha256:600000$LXqCKDQEMc5P2JME$3f5a8111eefc72885b193109de118d3fe6063ef2b645e65b32c568810cd230db', TRUE, FALSE)
 ON DUPLICATE KEY UPDATE id=id; 
