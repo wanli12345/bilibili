@@ -630,6 +630,60 @@ def followers():
     followers_users = current_user.followers.all()
     return render_template('followers.html', followers_users=followers_users)
 
+@app.route('/edit_profile', methods=['GET', 'POST'])
+@login_required
+def edit_profile():
+    """编辑个人资料"""
+    if request.method == 'POST':
+        username = request.form.get('username')
+        email = request.form.get('email')
+        
+        # 检查用户名是否已存在（排除当前用户）
+        existing_user = User.query.filter_by(username=username).first()
+        if existing_user and existing_user.id != current_user.id:
+            flash('用户名已存在')
+            return render_template('edit_profile.html')
+        
+        # 检查邮箱是否已存在（排除当前用户）
+        existing_email = User.query.filter_by(email=email).first()
+        if existing_email and existing_email.id != current_user.id:
+            flash('邮箱已存在')
+            return render_template('edit_profile.html')
+        
+        # 更新用户信息
+        current_user.username = username
+        current_user.email = email
+        
+        # 处理头像上传
+        if 'avatar' in request.files:
+            avatar_file = request.files['avatar']
+            if avatar_file.filename != '':
+                # 检查文件类型
+                allowed_extensions = {'png', 'jpg', 'jpeg', 'gif'}
+                if '.' in avatar_file.filename and avatar_file.filename.rsplit('.', 1)[1].lower() in allowed_extensions:
+                    # 检查文件大小（最大5MB）
+                    avatar_file.seek(0, 2)
+                    file_size = avatar_file.tell()
+                    avatar_file.seek(0)
+                    
+                    if file_size > 5 * 1024 * 1024:  # 5MB
+                        flash('头像文件不能超过5MB')
+                        return render_template('edit_profile.html')
+                    
+                    # 生成唯一文件名
+                    filename = secure_filename(avatar_file.filename)
+                    unique_filename = f"{uuid.uuid4()}_{filename}"
+                    file_path = os.path.join(app.config['AVATAR_FOLDER'], unique_filename)
+                    
+                    avatar_file.save(file_path)
+                    current_user.avatar = unique_filename
+        
+        db.session.commit()
+        flash('个人资料更新成功！')
+        return redirect(url_for('profile'))
+    
+    return render_template('edit_profile.html')
+
 @app.route('/upload_avatar', methods=['POST'])
 @login_required
 def upload_avatar():
