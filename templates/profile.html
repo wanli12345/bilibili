@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>个人中心 - 万里的秘密基地</title>
+    <title>个人中心 - {{ settings.site_name if settings else '万里的秘密基地' }}</title>
     <style>
         * {
             margin: 0;
@@ -15,7 +15,33 @@
             font-family: 'Arial', sans-serif;
             line-height: 1.6;
             color: #333;
-            background: #f4f5f7;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        /* 背景动画 */
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.05;
+        }
+        
+        .bg-animation::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="%23ffffff" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="%23ffffff" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="%23ffffff" opacity="0.1"/><circle cx="10" cy="60" r="0.5" fill="%23ffffff" opacity="0.1"/><circle cx="90" cy="40" r="0.5" fill="%23ffffff" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+            animation: float 20s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
         }
         
         .container {
@@ -24,10 +50,21 @@
             padding: 0 20px;
         }
         
+        /* 导航栏美化 */
         nav {
-            background: #00a1d6;
-            padding: 0.5rem 0;
+            background: rgba(0, 161, 214, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 0;
             margin-bottom: 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+        
+        nav:hover {
+            background: rgba(0, 161, 214, 0.98);
         }
         
         nav .container {
@@ -37,601 +74,553 @@
         }
         
         .logo {
-            font-size: 1.5rem;
+            font-size: 1.8rem;
             font-weight: bold;
             color: white;
             text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: transform 0.3s ease;
+        }
+        
+        .logo:hover {
+            transform: scale(1.05);
+        }
+        
+        .logo::before {
+            content: '🎬';
+            font-size: 2rem;
         }
         
         .nav-links {
             display: flex;
             list-style: none;
             align-items: center;
-        }
-        
-        .nav-links li {
-            margin-left: 2rem;
+            gap: 2rem;
         }
         
         .nav-links a {
             color: white;
             text-decoration: none;
-            transition: color 0.3s;
+            padding: 10px 14px;
+            border-radius: 22px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border: none;
+            font-weight: 600;
+        }
+        
+        .nav-links a::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.2);
+            transition: left 0.3s ease;
+        }
+        
+        .nav-links a:hover::before {
+            left: 0;
         }
         
         .nav-links a:hover {
-            color: #ffd700;
+            background: rgba(255, 255, 255, 0.12);
+            transform: translateY(-2px);
+        }
+
+        .nav-links a.active {
+            background: rgba(255, 255, 255, 0.18);
+            border-color: rgba(255, 255, 255, 0.35);
         }
         
-        .profile-container {
-            display: grid;
-            grid-template-columns: 300px 1fr;
-            gap: 2rem;
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
         
-        .profile-sidebar {
-            background: white;
-            border-radius: 10px;
+        .user-avatar:hover {
+            transform: scale(1.1);
+            border-color: #ffd700;
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.3);
+        }
+        
+        /* 主要内容区域 */
+        .main-content {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
             padding: 2rem;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            height: fit-content;
-        }
-        
-        .profile-avatar {
-            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
             margin-bottom: 2rem;
         }
         
-        .avatar-container {
+        /* 个人资料卡片 */
+        .profile-card {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            padding: 2rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            color: white;
+            margin-bottom: 2rem;
             position: relative;
-            display: inline-block;
-            margin-bottom: 1rem;
+            overflow: hidden;
         }
         
-        .avatar-img {
+        .profile-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="%23ffffff" opacity="0.3"/><circle cx="80" cy="40" r="1" fill="%23ffffff" opacity="0.3"/><circle cx="40" cy="80" r="1.5" fill="%23ffffff" opacity="0.3"/></svg>');
+            animation: sparkle 3s ease-in-out infinite;
+        }
+        
+        @keyframes sparkle {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.1); }
+        }
+        
+        .profile-avatar {
             width: 120px;
             height: 120px;
             border-radius: 50%;
-            background: #ddd;
-            display: block;
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 1;
         }
         
-        .avatar-upload-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            transition: opacity 0.3s;
+        .profile-avatar:hover {
+            transform: scale(1.1);
+            border-color: #ffd700;
+            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.3);
         }
         
-        .avatar-container:hover .avatar-upload-overlay {
-            opacity: 1;
+        .profile-info {
+            flex: 1;
+            position: relative;
+            z-index: 1;
         }
         
-        .avatar-upload-btn {
-            color: white;
-            font-size: 0.8rem;
-            cursor: pointer;
-            padding: 5px 10px;
-            background: rgba(0, 161, 214, 0.8);
-            border-radius: 15px;
-            text-decoration: none;
-        }
-        
-        .profile-info h2 {
-            color: #333;
+        .profile-name {
+            font-size: 2rem;
+            font-weight: bold;
             margin-bottom: 0.5rem;
         }
         
-        .profile-info p {
-            color: #666;
+        .profile-email {
+            font-size: 1.1rem;
+            opacity: 0.9;
             margin-bottom: 1rem;
         }
         
         .profile-stats {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-            margin-bottom: 2rem;
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
         }
         
         .stat-item {
-            text-align: center;
-            padding: 1rem;
-            background: #f8f9fa;
-            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.8rem 1.5rem;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: white;
         }
         
-        .stat-number {
+        .stat-item:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+        
+        .stat-icon {
             font-size: 1.5rem;
+        }
+        
+        .stat-value {
+            font-size: 1.2rem;
             font-weight: bold;
-            color: #00a1d6;
         }
         
         .stat-label {
             font-size: 0.9rem;
-            color: #666;
+            opacity: 0.8;
         }
         
-        .clickable {
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        
-        .clickable:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 161, 214, 0.3);
-            background: #e3f2fd;
-        }
-        
+        /* 操作按钮 */
         .profile-actions {
             display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
+            gap: 1rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
         }
         
         .profile-btn {
-            padding: 10px;
+            padding: 12px 24px;
             border: none;
-            border-radius: 5px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: bold;
             cursor: pointer;
-            font-size: 0.9rem;
-            transition: background 0.3s;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
         }
         
         .upload-btn {
-            background: #00a1d6;
+            background: linear-gradient(135deg, #00a1d6, #0088b3);
             color: white;
         }
         
         .upload-btn:hover {
-            background: #0088b3;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 161, 214, 0.3);
         }
         
         .edit-btn {
-            background: #28a745;
+            background: linear-gradient(135deg, #4ecdc4, #44a08d);
             color: white;
         }
         
         .edit-btn:hover {
-            background: #218838;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(78, 205, 196, 0.3);
         }
         
-        .main-content {
-            background: white;
-            border-radius: 10px;
-            padding: 2rem;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        
-        .content-header {
-            margin-bottom: 2rem;
-        }
-        
-        .content-header h1 {
-            color: #333;
-            font-size: 1.8rem;
-            margin-bottom: 0.5rem;
-        }
-        
-        .content-header p {
-            color: #666;
-        }
-        
-        .video-grid {
+        /* 数据展示区域 */
+        .data-section {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 1.5rem;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
         }
         
-        .video-card {
-            background: #f8f9fa;
-            border-radius: 8px;
-            overflow: hidden;
-            transition: transform 0.3s, box-shadow 0.3s;
-            position: relative;
+        .data-card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
         }
         
-        .video-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        .data-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+            border-color: #00a1d6;
         }
         
-        .video-thumbnail {
-            width: 100%;
-            height: 160px;
-            background: #ddd;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .video-thumbnail img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        
-        .video-info {
-            padding: 1rem;
-        }
-        
-        .video-title {
-            font-size: 1rem;
-            font-weight: bold;
-            margin-bottom: 0.5rem;
+        .data-card h3 {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
             color: #333;
-            line-height: 1.4;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
         
-        .video-meta {
+        .data-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            padding: 0.8rem 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .data-item:last-child {
+            border-bottom: none;
+        }
+        
+        .data-label {
+            color: #666;
             font-size: 0.9rem;
-            color: #666;
         }
         
-        .video-actions {
-            display: flex;
-            gap: 0.5rem;
-            margin-top: 0.5rem;
-        }
-        
-        .video-action-btn {
-            padding: 4px 8px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.8rem;
-            transition: background 0.3s;
-        }
-        
-        .edit-thumbnail-btn {
-            background: #007bff;
-            color: white;
-        }
-        
-        .edit-thumbnail-btn:hover {
-            background: #0056b3;
-        }
-        
-        .delete-video-btn {
-            background: #dc3545;
-            color: white;
-        }
-        
-        .delete-video-btn:hover {
-            background: #c82333;
-        }
-        
-        .empty-state {
-            text-align: center;
-            padding: 3rem;
-            color: #666;
-        }
-        
-        .empty-state h3 {
-            margin-bottom: 1rem;
+        .data-value {
+            font-weight: bold;
             color: #333;
         }
         
-        .empty-state p {
-            margin-bottom: 2rem;
+        .coin-value {
+            color: #ffd700;
+            font-size: 1.2rem;
         }
         
-        .upload-link {
-            display: inline-block;
-            background: #00a1d6;
-            color: white;
-            padding: 10px 20px;
-            text-decoration: none;
-            border-radius: 5px;
-            transition: background 0.3s;
+        .likes-value {
+            color: #ff6b6b;
+            font-size: 1.2rem;
         }
         
-        .upload-link:hover {
-            background: #0088b3;
+        .follow-value {
+            color: #4ecdc4;
+            font-size: 1.2rem;
         }
         
         /* 响应式设计 */
         @media (max-width: 768px) {
-            .profile-container {
-                grid-template-columns: 1fr;
-            }
-            
-            .video-grid {
-                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            .profile-card {
+                flex-direction: column;
+                text-align: center;
                 gap: 1rem;
             }
+            
+            .profile-stats {
+                justify-content: center;
+            }
+            
+            .profile-actions {
+                justify-content: center;
+            }
+            
+            .data-section {
+                grid-template-columns: 1fr;
+            }
         }
+        
+        /* 滚动条美化 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #00a1d6, #0088b3);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #0088b3, #006699);
+        }
+        
+        /* 动画效果 */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .profile-card {
+            animation: fadeInUp 0.6s ease;
+        }
+        
+        .data-card {
+            animation: fadeInUp 0.6s ease;
+        }
+        
+        .data-card:nth-child(1) { animation-delay: 0.1s; }
+        .data-card:nth-child(2) { animation-delay: 0.2s; }
+        .data-card:nth-child(3) { animation-delay: 0.3s; }
     </style>
 </head>
 <body>
+    <div class="bg-animation"></div>
+    
     <nav>
         <div class="container">
             <a href="/" class="logo">万里的秘密基地</a>
             <ul class="nav-links">
-                <li><a href="/">首页</a></li>
-                <li><a href="/upload">上传视频</a></li>
-                {% if current_user.is_admin %}
-                    <li><a href="/admin">管理后台</a></li>
+                <li>
+                    <a href="/" class="{% if request.path == '/' %}active{% endif %}">🏠 首页</a>
+                </li>
+                <li>
+                    {% if current_user.is_authenticated %}
+                        <a href="/upload">📤 上传</a>
+                    {% else %}
+                        <a href="/login">📤 上传</a>
+                    {% endif %}
+                </li>
+                <li>
+                    <a href="/search" class="{% if request.path.startswith('/search') %}active{% endif %}">🔎 搜索</a>
+                </li>
+                {% if current_user.is_authenticated %}
+                    <li><a href="/profile" class="active">👤 个人中心</a></li>
+                    {% if current_user.is_admin %}
+                        <li><a href="/admin" class="{% if request.path.startswith('/admin') %}active{% endif %}">🛠 管理后台</a></li>
+                    {% endif %}
+                    <li><a href="/logout">🚪 退出</a></li>
+                {% else %}
+                    <li><a href="/login">🔐 登录</a></li>
+                    <li><a href="/register">🆕 注册</a></li>
                 {% endif %}
-                <li><a href="/logout">退出</a></li>
             </ul>
+            {% if current_user.is_authenticated %}
+                <img src="/static/avatars/{{ current_user.avatar }}" alt="头像" class="user-avatar" onclick="window.location.href='/profile'">
+            {% else %}
+                <img src="/static/avatars/牛.png" alt="默认头像" class="user-avatar" onclick="window.location.href='/login'">
+            {% endif %}
         </div>
     </nav>
     
     <div class="container">
-        <div class="profile-container">
-            <div class="profile-sidebar">
-                <div class="profile-avatar">
-                    <div class="avatar-container">
-                        <img src="/static/avatars/{{ current_user.avatar }}" alt="头像" class="avatar-img" id="avatarImg">
-                        <div class="avatar-upload-overlay">
-                            <label for="avatarInput" class="avatar-upload-btn">更换头像</label>
-                            <input type="file" id="avatarInput" accept="image/*" style="display: none;">
+        <div class="main-content">
+            <div class="profile-card">
+                <img src="/static/avatars/{{ current_user.avatar }}" alt="头像" class="profile-avatar">
+                <div class="profile-info">
+                    <h1 class="profile-name">{{ current_user.username }}</h1>
+                    <p class="profile-email">{{ current_user.email }}</p>
+                    <div class="profile-stats">
+                        <a href="/following" class="stat-item">
+                            <span class="stat-icon">👥</span>
+                            <span class="stat-value">{{ current_user.following.count() }}</span>
+                            <span class="stat-label">关注</span>
+                        </a>
+                        <a href="/followers" class="stat-item">
+                            <span class="stat-icon">👤</span>
+                            <span class="stat-value">{{ current_user.followers.count() }}</span>
+                            <span class="stat-label">粉丝</span>
+                        </a>
+                        <div class="stat-item">
+                            <span class="stat-icon">🪙</span>
+                            <span class="stat-value">{{ current_user.wanli_coins }}</span>
+                            <span class="stat-label">万里币</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-icon">👍</span>
+                            <span class="stat-value">{{ current_user.received_likes }}</span>
+                            <span class="stat-label">获赞</span>
                         </div>
                     </div>
-                    <h2>{{ current_user.username }}</h2>
-                    <p>{{ current_user.email }}</p>
-                </div>
-                
-                <div class="profile-stats">
-                    <div class="stat-item">
-                        <div class="stat-number">{{ current_user.wanli_coins }}</div>
-                        <div class="stat-label">万里币</div>
+                    <div class="profile-actions">
+                        <a href="/upload" class="profile-btn upload-btn">
+                            <span>📤</span>
+                            <span>上传视频</span>
+                        </a>
+                        <a href="/edit_profile" class="profile-btn edit-btn">
+                            <span>✏️</span>
+                            <span>编辑资料</span>
+                        </a>
                     </div>
-                    <div class="stat-item">
-                        <div class="stat-number">{{ current_user.received_likes }}</div>
-                        <div class="stat-label">收到的赞</div>
-                    </div>
-                    <div class="stat-item clickable" onclick="window.location.href='/following'">
-                        <div class="stat-number">{{ current_user.following.count() }}</div>
-                        <div class="stat-label">关注数</div>
-                    </div>
-                    <div class="stat-item clickable" onclick="window.location.href='/followers'">
-                        <div class="stat-number">{{ current_user.followers.count() }}</div>
-                        <div class="stat-label">粉丝数</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-number">{{ pending_videos|length + approved_videos|length + rejected_videos|length }}</div>
-                        <div class="stat-label">总视频数</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-number">{{ approved_videos|length }}</div>
-                        <div class="stat-label">已通过</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-number">{{ pending_videos|length }}</div>
-                        <div class="stat-label">待审核</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-number">{{ rejected_videos|length }}</div>
-                        <div class="stat-label">已拒绝</div>
-                    </div>
-                </div>
-                
-                <div class="profile-actions">
-                    <a href="/upload" class="profile-btn upload-btn">上传视频</a>
-                    <a href="/edit_profile" class="profile-btn edit-btn">编辑资料</a>
                 </div>
             </div>
             
-            <div class="main-content">
-                <div class="content-header">
-                    <h1>我的视频</h1>
-                    <p>管理你上传的所有视频</p>
+            <div class="data-section">
+                <div class="data-card">
+                    <h3>
+                        <span>💰</span>
+                        账户信息
+                    </h3>
+                    <div class="data-item">
+                        <span class="data-label">万里币余额</span>
+                        <span class="data-value coin-value">{{ current_user.wanli_coins }} 个</span>
+                    </div>
+                    <div class="data-item">
+                        <span class="data-label">注册时间</span>
+                        <span class="data-value">{{ current_user.created_at.strftime('%Y-%m-%d') }}</span>
+                    </div>
+                    <div class="data-item">
+                        <span class="data-label">账户状态</span>
+                        <span class="data-value">{% if current_user.is_admin %}管理员{% else %}普通用户{% endif %}</span>
+                    </div>
                 </div>
                 
-                <!-- 已通过视频 -->
-                {% if approved_videos %}
-                    <h3 style="color: #28a745; margin-bottom: 15px;">✅ 已通过视频 ({{ approved_videos|length }})</h3>
-                    <div class="video-grid">
-                        {% for video in approved_videos %}
-                            <div class="video-card" data-video-id="{{ video.id }}">
-                                <a href="/video/{{ video.id }}">
-                                    <div class="video-thumbnail">
-                                        {% if video.thumbnail %}
-                                            <img src="/static/thumbnails/{{ video.thumbnail }}" alt="{{ video.title }}" id="thumbnail-{{ video.id }}">
-                                        {% else %}
-                                            <img src="/static/thumbnails/default.jpg" alt="{{ video.title }}" id="thumbnail-{{ video.id }}">
-                                        {% endif %}
-                                    </div>
-                                </a>
-                                <div class="video-info">
-                                    <a href="/video/{{ video.id }}" style="text-decoration: none;">
-                                        <h3 class="video-title">{{ video.title }}</h3>
-                                    </a>
-                                    <div class="video-meta">
-                                        <span>{{ video.views }} 播放</span>
-                                        <span>{{ video.created_at.strftime('%Y-%m-%d') }}</span>
-                                    </div>
-                                    <div class="video-actions">
-                                        <button class="video-action-btn edit-thumbnail-btn" onclick="editThumbnail({{ video.id }})">更换封面</button>
-                                        <button class="video-action-btn delete-video-btn" onclick="deleteVideo({{ video.id }})">删除视频</button>
-                                    </div>
-                                </div>
-                                <input type="file" id="thumbnailInput-{{ video.id }}" accept="image/*" style="display: none;">
-                            </div>
-                        {% endfor %}
+                <div class="data-card">
+                    <h3>
+                        <span>📊</span>
+                        互动数据
+                    </h3>
+                    <div class="data-item">
+                        <span class="data-label">收到的点赞</span>
+                        <span class="data-value likes-value">{{ current_user.received_likes }} 个</span>
                     </div>
-                {% endif %}
-
-                <!-- 待审核视频 -->
-                {% if pending_videos %}
-                    <h3 style="color: #ffc107; margin: 30px 0 15px 0;">⏳ 待审核视频 ({{ pending_videos|length }})</h3>
-                    <div class="video-grid">
-                        {% for video in pending_videos %}
-                            <div class="video-card" data-video-id="{{ video.id }}">
-                                <a href="/video/{{ video.id }}">
-                                    <div class="video-thumbnail">
-                                        {% if video.thumbnail %}
-                                            <img src="/static/thumbnails/{{ video.thumbnail }}" alt="{{ video.title }}" id="thumbnail-{{ video.id }}">
-                                        {% else %}
-                                            <img src="/static/thumbnails/default.jpg" alt="{{ video.title }}" id="thumbnail-{{ video.id }}">
-                                        {% endif %}
-                                    </div>
-                                </a>
-                                <div class="video-info">
-                                    <a href="/video/{{ video.id }}" style="text-decoration: none;">
-                                        <h3 class="video-title">{{ video.title }}</h3>
-                                    </a>
-                                    <div class="video-meta">
-                                        <span style="color: #ffc107;">待审核</span>
-                                        <span>{{ video.created_at.strftime('%Y-%m-%d') }}</span>
-                                    </div>
-                                    <div class="video-actions">
-                                        <button class="video-action-btn edit-thumbnail-btn" onclick="editThumbnail({{ video.id }})">更换封面</button>
-                                        <button class="video-action-btn delete-video-btn" onclick="deleteVideo({{ video.id }})">删除视频</button>
-                                    </div>
-                                </div>
-                                <input type="file" id="thumbnailInput-{{ video.id }}" accept="image/*" style="display: none;">
-                            </div>
-                        {% endfor %}
+                    <div class="data-item">
+                        <span class="data-label">关注用户</span>
+                        <span class="data-value follow-value">{{ current_user.following.count() }} 人</span>
                     </div>
-                {% endif %}
-
-                <!-- 已拒绝视频 -->
-                {% if rejected_videos %}
-                    <h3 style="color: #dc3545; margin: 30px 0 15px 0;">❌ 已拒绝视频 ({{ rejected_videos|length }})</h3>
-                    <div class="video-grid">
-                        {% for video in rejected_videos %}
-                            <div class="video-card" data-video-id="{{ video.id }}">
-                                <a href="/video/{{ video.id }}">
-                                    <div class="video-thumbnail">
-                                        {% if video.thumbnail %}
-                                            <img src="/static/thumbnails/{{ video.thumbnail }}" alt="{{ video.title }}" id="thumbnail-{{ video.id }}">
-                                        {% else %}
-                                            <img src="/static/thumbnails/default.jpg" alt="{{ video.title }}" id="thumbnail-{{ video.id }}">
-                                        {% endif %}
-                                    </div>
-                                </a>
-                                <div class="video-info">
-                                    <a href="/video/{{ video.id }}" style="text-decoration: none;">
-                                        <h3 class="video-title">{{ video.title }}</h3>
-                                    </a>
-                                    <div class="video-meta">
-                                        <span style="color: #dc3545;">已拒绝</span>
-                                        <span>{{ video.created_at.strftime('%Y-%m-%d') }}</span>
-                                        {% if video.review_comment %}
-                                            <span style="color: #666; font-size: 0.9em;">原因: {{ video.review_comment }}</span>
-                                        {% endif %}
-                                    </div>
-                                    <div class="video-actions">
-                                        <button class="video-action-btn edit-thumbnail-btn" onclick="editThumbnail({{ video.id }})">更换封面</button>
-                                        <button class="video-action-btn delete-video-btn" onclick="deleteVideo({{ video.id }})">删除视频</button>
-                                    </div>
-                                </div>
-                                <input type="file" id="thumbnailInput-{{ video.id }}" accept="image/*" style="display: none;">
-                            </div>
-                        {% endfor %}
+                    <div class="data-item">
+                        <span class="data-label">粉丝数量</span>
+                        <span class="data-value follow-value">{{ current_user.followers.count() }} 人</span>
                     </div>
-                {% endif %}
-
-                {% if not approved_videos and not pending_videos and not rejected_videos %}
-                    <div class="empty-state">
-                        <h3>还没有上传视频</h3>
-                        <p>开始上传你的第一个视频，分享精彩内容！</p>
-                        <a href="/upload" class="upload-link">上传视频</a>
+                </div>
+                
+                <div class="data-card">
+                    <h3>
+                        <span>🎯</span>
+                        快速操作
+                    </h3>
+                    <div class="data-item">
+                        <span class="data-label">上传视频</span>
+                        <a href="/upload" class="data-value" style="color: #00a1d6; text-decoration: none;">立即上传</a>
                     </div>
-                {% endif %}
+                    <div class="data-item">
+                        <span class="data-label">编辑资料</span>
+                        <a href="/edit_profile" class="data-value" style="color: #4ecdc4; text-decoration: none;">修改信息</a>
+                    </div>
+                    <div class="data-item">
+                        <span class="data-label">查看关注</span>
+                        <a href="/following" class="data-value" style="color: #667eea; text-decoration: none;">我的关注</a>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
     
     <script>
-        // 头像上传功能
-        document.getElementById('avatarInput').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const formData = new FormData();
-                formData.append('avatar', file);
-                
-                fetch('/upload_avatar', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        // 更新头像显示
-                        document.getElementById('avatarImg').src = `/static/avatars/${data.filename}`;
-                        alert('头像上传成功！');
-                    } else {
-                        alert(data.message || '头像上传失败');
-                    }
-                })
-                .catch(error => {
-                    alert('头像上传失败，请稍后重试');
-                });
-            }
+        // 页面加载动画
+        window.addEventListener('load', function() {
+            const cards = document.querySelectorAll('.data-card');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    card.style.transition = 'all 0.5s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
         });
         
-        // 更换视频封面
-        function editThumbnail(videoId) {
-            const input = document.getElementById(`thumbnailInput-${videoId}`);
-            input.click();
-            
-            input.addEventListener('change', function(e) {
-                const file = e.target.files[0];
-                if (file) {
-                    const formData = new FormData();
-                    formData.append('thumbnail', file);
-                    formData.append('video_id', videoId);
-                    
-                    fetch('/upload_thumbnail', {
-                        method: 'POST',
-                        body: formData
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.status === 'success') {
-                            // 更新封面显示
-                            document.getElementById(`thumbnail-${videoId}`).src = `/static/thumbnails/${data.filename}`;
-                            alert('封面更新成功！');
-                        } else {
-                            alert(data.message || '封面更新失败');
-                        }
-                    })
-                    .catch(error => {
-                        alert('封面更新失败，请稍后重试');
-                    });
+        // 滚动动画
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
                 }
             });
-        }
+        }, observerOptions);
         
-        // 删除视频
-        function deleteVideo(videoId) {
-            if (confirm('确定要删除这个视频吗？此操作不可撤销。')) {
-                fetch(`/user/delete_video/${videoId}`, {
-                    method: 'POST'
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        // 移除视频卡片
-                        document.querySelector(`[data-video-id="${videoId}"]`).remove();
-                        alert('视频删除成功！');
-                    } else {
-                        alert(data.message || '删除失败');
-                    }
-                })
-                .catch(error => {
-                    alert('删除失败，请稍后重试');
-                });
-            }
-        }
+        // 观察所有数据卡片
+        document.querySelectorAll('.data-card').forEach(card => {
+            observer.observe(card);
+        });
     </script>
 </body>
 </html> 

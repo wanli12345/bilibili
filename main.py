@@ -35,12 +35,14 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['AVATAR_FOLDER'] = 'static/avatars'
 app.config['THUMBNAIL_FOLDER'] = 'static/thumbnails'
+app.config['SITE_ASSET_FOLDER'] = 'static/site'
 app.config['MAX_CONTENT_LENGTH'] = None  # 禁用文件大小限制
 
 # 确保上传目录存在
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(app.config['AVATAR_FOLDER'], exist_ok=True)
 os.makedirs(app.config['THUMBNAIL_FOLDER'], exist_ok=True)
+os.makedirs(app.config['SITE_ASSET_FOLDER'], exist_ok=True)
 
 db = SQLAlchemy(app)
 login_manager = LoginManager()
@@ -122,6 +124,38 @@ class Danmaku(db.Model):
     # 添加关系
     author = db.relationship('User', backref='danmakus')
 
+# 站点设置
+class SiteSetting(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    site_name = db.Column(db.String(200), default='万里的秘密基地')
+    page_title = db.Column(db.String(200), nullable=True)  # 首页 <title>
+    homepage_bg_image = db.Column(db.String(255), nullable=True)  # 首页背景图文件名（相对 static/site）
+    homepage_bg_color1 = db.Column(db.String(20), default='#667eea')
+    homepage_bg_color2 = db.Column(db.String(20), default='#764ba2')
+
+def get_site_settings() -> SiteSetting:
+    settings = SiteSetting.query.first()
+    if not settings:
+        settings = SiteSetting()
+        db.session.add(settings)
+        db.session.commit()
+    return settings
+
+@app.context_processor
+def inject_site_settings():
+    try:
+        settings = get_site_settings()
+    except Exception:
+        # 在数据库尚未创建时避免模板渲染失败
+        class _Fallback:
+            site_name = '万里的秘密基地'
+            page_title = None
+            homepage_bg_image = None
+            homepage_bg_color1 = '#667eea'
+            homepage_bg_color2 = '#764ba2'
+        settings = _Fallback()
+    return {'settings': settings}
+
 def validate_password(password):
     """验证密码强度"""
     if len(password) < 12:
@@ -153,6 +187,7 @@ def login():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest' or 'application/json' in (request.headers.get('Accept') or '')
         user = User.query.filter_by(username=username).first()
         
         if user and check_password_hash(user.password_hash, password):
@@ -172,8 +207,12 @@ def login():
                 return redirect(url_for('change_admin_password'))
             else:
                 login_user(user)
+                if is_ajax:
+                    return jsonify({'success': True, 'redirect_url': url_for('index')}), 200
                 return redirect(url_for('index'))
         else:
+            if is_ajax:
+                return jsonify({'success': False, 'message': '用户名或密码错误'}), 400
             flash('用户名或密码错误')
     
     return render_template('login.html')
@@ -184,12 +223,17 @@ def register():
         username = request.form.get('username')
         email = request.form.get('email')
         password = request.form.get('password')
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest' or 'application/json' in (request.headers.get('Accept') or '')
         
         if User.query.filter_by(username=username).first():
+            if is_ajax:
+                return jsonify({'success': False, 'message': '用户名已存在'}), 400
             flash('用户名已存在')
             return render_template('register.html')
         
         if User.query.filter_by(email=email).first():
+            if is_ajax:
+                return jsonify({'success': False, 'message': '邮箱已存在'}), 400
             flash('邮箱已存在')
             return render_template('register.html')
         
@@ -202,6 +246,8 @@ def register():
         db.session.add(user)
         db.session.commit()
         
+        if is_ajax:
+            return jsonify({'success': True, 'redirect_url': url_for('login')}), 200
         flash('注册成功，请登录')
         return redirect(url_for('login'))
     
@@ -499,6 +545,71 @@ def admin():
                          approved_videos=approved_videos,
                          rejected_videos=rejected_videos,
                          comments=comments)
+
+@app.route('/admin/settings', methods=['GET', 'POST'])
+@login_required
+def admin_settings():
+    if not current_user.is_admin:
+        flash('您没有管理员权限')
+        return redirect(url_for('index'))
+    # 管理员首次登录需先改密
+    if not current_user.password_changed:
+        return redirect(url_for('change_admin_password'))
+
+    settings = get_site_settings()
+    if request.method == 'POST':
+        site_name = request.form.get('site_name', '').strip()
+        page_title = request.form.get('page_title', '').strip()
+        color1 = request.form.get('homepage_bg_color1', '').strip()
+        color2 = request.form.get('homepage_bg_color2', '').strip()
+        if site_name:
+            settings.site_name = site_name
+        settings.page_title = page_title or None
+        if color1:
+            settings.homepage_bg_color1 = color1
+        if color2:
+            settings.homepage_bg_color2 = color2
+        db.session.commit()
+        flash('站点设置已保存')
+        return redirect(url_for('admin_settings'))
+
+    return render_template('admin_settings.html', settings=settings)
+
+@app.route('/admin/settings/upload_bg', methods=['POST'])
+@login_required
+def admin_settings_upload_bg():
+    if not current_user.is_admin:
+        return jsonify({'status': 'error', 'message': '权限不足'}), 403
+    settings = get_site_settings()
+    if 'bg' not in request.files:
+        return jsonify({'status': 'error', 'message': '未选择文件'}), 400
+    file = request.files['bg']
+    if file.filename == '':
+        return jsonify({'status': 'error', 'message': '未选择文件'}), 400
+    allowed = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+    if '.' not in file.filename or file.filename.rsplit('.', 1)[1].lower() not in allowed:
+        return jsonify({'status': 'error', 'message': '仅支持 png/jpg/jpeg/gif/webp'}), 400
+    # 限制大小 5MB
+    file.seek(0, 2); size = file.tell(); file.seek(0)
+    if size > 5 * 1024 * 1024:
+        return jsonify({'status': 'error', 'message': '文件不能超过5MB'}), 400
+    filename = secure_filename(file.filename)
+    unique = f"{uuid.uuid4()}_{filename}"
+    path = os.path.join(app.config['SITE_ASSET_FOLDER'], unique)
+    file.save(path)
+    settings.homepage_bg_image = unique
+    db.session.commit()
+    return jsonify({'status': 'success', 'filename': unique})
+
+@app.route('/admin/settings/reset_bg', methods=['POST'])
+@login_required
+def admin_settings_reset_bg():
+    if not current_user.is_admin:
+        return jsonify({'status': 'error', 'message': '权限不足'}), 403
+    settings = get_site_settings()
+    settings.homepage_bg_image = None
+    db.session.commit()
+    return jsonify({'status': 'success'})
 
 @app.route('/admin/delete_video/<int:video_id>', methods=['POST'])
 @login_required
@@ -868,5 +979,8 @@ if __name__ == '__main__':
             )
             db.session.add(admin)
             db.session.commit()
-    
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    # 允许通过环境变量配置运行参数，避免端口被占用
+    debug_env = os.getenv('FLASK_DEBUG', os.getenv('DEBUG', '1')).lower() in ('1', 'true', 'yes', 'on')
+    host = os.getenv('HOST', '0.0.0.0')
+    port = int(os.getenv('PORT', os.getenv('FLASK_RUN_PORT', '80')))
+    app.run(debug=debug_env, host=host, port=port)

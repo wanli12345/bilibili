@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>万里的秘密基地 - 视频分享平台</title>
+    <title>{{ (settings.page_title or (settings.site_name + ' - 分享你的精彩瞬间')) if settings else '万里的秘密基地 - 分享你的精彩瞬间' }}</title>
     <style>
         * {
             margin: 0;
@@ -12,29 +12,63 @@
         }
         
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Arial', sans-serif;
             line-height: 1.6;
-            color: #2c3e50;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            {% if settings and settings.homepage_bg_image %}
+            background: url('/static/site/{{ settings.homepage_bg_image }}') center/cover no-repeat fixed;
+            {% else %}
+            background: linear-gradient(135deg, {{ settings.homepage_bg_color1 if settings else '#667eea' }} 0%, {{ settings.homepage_bg_color2 if settings else '#764ba2' }} 100%);
+            {% endif %}
             min-height: 100vh;
         }
         
+        /* 背景动画 */
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.1;
+        }
+        
+        .bg-animation::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="%23ffffff" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="%23ffffff" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="%23ffffff" opacity="0.1"/><circle cx="10" cy="60" r="0.5" fill="%23ffffff" opacity="0.1"/><circle cx="90" cy="40" r="0.5" fill="%23ffffff" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+            animation: float 20s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+        
         .container {
-            max-width: 1400px;
+            max-width: 1200px;
             margin: 0 auto;
             padding: 0 20px;
         }
         
-        /* 导航栏 */
+        /* 导航栏美化 */
         nav {
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(0, 161, 214, 0.95);
             backdrop-filter: blur(10px);
             padding: 1rem 0;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
             position: sticky;
             top: 0;
             z-index: 1000;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-            border-bottom: 1px solid rgba(255,255,255,0.2);
+            transition: all 0.3s ease;
+        }
+        
+        nav:hover {
+            background: rgba(0, 161, 214, 0.98);
         }
         
         nav .container {
@@ -44,29 +78,23 @@
         }
         
         .logo {
-            font-size: 2rem;
-            font-weight: 800;
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: white;
             text-decoration: none;
             display: flex;
             align-items: center;
             gap: 10px;
+            transition: transform 0.3s ease;
         }
         
-        .logo-icon {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 20px;
-            font-weight: bold;
+        .logo:hover {
+            transform: scale(1.05);
+        }
+        
+        .logo::before {
+            content: '🎬';
+            font-size: 2rem;
         }
         
         .nav-links {
@@ -77,194 +105,160 @@
         }
         
         .nav-links a {
-            color: #2c3e50;
+            color: white;
             text-decoration: none;
-            font-weight: 500;
-            padding: 10px 20px;
-            border-radius: 25px;
+            padding: 10px 14px;
+            border-radius: 22px;
             transition: all 0.3s ease;
             position: relative;
+            overflow: hidden;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border: none;
+            font-weight: 600;
+        }
+        
+        .nav-links a::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.2);
+            transition: left 0.3s ease;
+        }
+        
+        .nav-links a:hover::before {
+            left: 0;
         }
         
         .nav-links a:hover {
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            color: white;
+            background: rgba(255, 255, 255, 0.12);
             transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .nav-links a.active {
+            background: rgba(255, 255, 255, 0.18);
+            border-color: rgba(255, 255, 255, 0.35);
         }
         
-        .search-box {
-            display: flex;
-            align-items: center;
-            margin-left: 2rem;
-            position: relative;
-        }
-        
-        .search-box input {
-            padding: 12px 20px;
-            border: 2px solid #e1e8ed;
-            border-radius: 30px;
-            width: 300px;
-            outline: none;
-            font-size: 14px;
-            transition: all 0.3s ease;
-            background: rgba(255, 255, 255, 0.9);
-        }
-        
-        .search-box input:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-            width: 350px;
-        }
-        
-        .search-box button {
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 30px;
-            margin-left: 10px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-        
-        .search-box button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-        }
-        
-        .user-menu {
-            display: flex;
-            align-items: center;
-            margin-left: 2rem;
-        }
-        
+        /* 用户头像美化 */
         .user-avatar {
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            margin-right: 10px;
-            border: 3px solid #667eea;
-            transition: transform 0.3s ease;
+            cursor: pointer;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
         
         .user-avatar:hover {
             transform: scale(1.1);
-        }
-        
-        .user-menu a {
-            color: #2c3e50;
-            text-decoration: none;
-            font-weight: 500;
-            padding: 8px 16px;
-            border-radius: 20px;
-            transition: all 0.3s ease;
-            margin-left: 10px;
-        }
-        
-        .user-menu a:hover {
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            color: white;
+            border-color: #ffd700;
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.3);
         }
         
         /* 主要内容区域 */
         .main-content {
-            padding: 3rem 0;
-        }
-        
-        .hero-section {
-            text-align: center;
-            margin-bottom: 4rem;
-            color: white;
-        }
-        
-        .hero-section h1 {
-            font-size: 3.5rem;
-            font-weight: 800;
-            margin-bottom: 1rem;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
-        
-        .hero-section p {
-            font-size: 1.2rem;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
             margin-bottom: 2rem;
+        }
+        
+        .welcome-section {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 2rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .welcome-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="%23ffffff" opacity="0.3"/><circle cx="80" cy="40" r="1" fill="%23ffffff" opacity="0.3"/><circle cx="40" cy="80" r="1.5" fill="%23ffffff" opacity="0.3"/></svg>');
+            animation: sparkle 3s ease-in-out infinite;
+        }
+        
+        @keyframes sparkle {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.1); }
+        }
+        
+        .welcome-section h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .welcome-section p {
+            font-size: 1.2rem;
             opacity: 0.9;
+            position: relative;
+            z-index: 1;
         }
         
-        .cta-buttons {
-            display: flex;
-            justify-content: center;
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
-        
-        .cta-btn {
-            padding: 15px 30px;
-            border: none;
-            border-radius: 30px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-block;
-        }
-        
-        .cta-btn.primary {
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            color: white;
-        }
-        
-        .cta-btn.secondary {
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-        }
-        
-        .cta-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
-        }
-        
-        /* 视频网格 */
+        /* 视频网格美化 */
         .video-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             gap: 2rem;
-            margin-top: 3rem;
+            margin-top: 2rem;
         }
         
         .video-card {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
+            background: white;
+            border-radius: 15px;
             overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
             transition: all 0.3s ease;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.2);
+            position: relative;
+            cursor: pointer;
         }
         
         .video-card:hover {
             transform: translateY(-10px);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+        
+        .video-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #00a1d6, #ff6b6b, #4ecdc4);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+        
+        .video-card:hover::before {
+            transform: scaleX(1);
         }
         
         .video-thumbnail {
             width: 100%;
             height: 200px;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .video-thumbnail img {
-            width: 100%;
-            height: 100%;
             object-fit: cover;
             transition: transform 0.3s ease;
         }
         
-        .video-card:hover .video-thumbnail img {
+        .video-card:hover .video-thumbnail {
             transform: scale(1.05);
         }
         
@@ -273,32 +267,26 @@
         }
         
         .video-title {
-            font-size: 1.2rem;
-            font-weight: 700;
+            font-size: 1.1rem;
+            font-weight: bold;
             margin-bottom: 0.5rem;
-            color: #2c3e50;
+            color: #333;
             line-height: 1.4;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
         }
         
         .video-meta {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            font-size: 0.9rem;
-            color: #7f8c8d;
+            gap: 1rem;
             margin-top: 1rem;
+            font-size: 0.9rem;
+            color: #666;
         }
         
         .video-author {
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            color: #667eea;
-            font-weight: 500;
         }
         
         .author-avatar {
@@ -307,52 +295,48 @@
             border-radius: 50%;
         }
         
-        .empty-state {
-            text-align: center;
-            padding: 4rem 2rem;
-            color: white;
+        .video-stats {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.5rem;
         }
         
-        .empty-state h3 {
-            font-size: 2rem;
-            margin-bottom: 1rem;
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.8rem;
+            color: #888;
         }
         
-        .empty-state p {
-            font-size: 1.1rem;
-            margin-bottom: 2rem;
-            opacity: 0.8;
+        /* 模态框美化 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
         }
         
-        /* 响应式设计 */
-        @media (max-width: 768px) {
-            .nav-links {
-                display: none;
-            }
-            
-            .search-box input {
-                width: 200px;
-            }
-            
-            .search-box input:focus {
-                width: 250px;
-            }
-            
-            .hero-section h1 {
-                font-size: 2.5rem;
-            }
-            
-            .video-grid {
-                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-                gap: 1.5rem;
-            }
+        .modal-content {
+            background: white;
+            margin: 5% auto;
+            padding: 2rem;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+            animation: modalSlideIn 0.3s ease;
         }
         
-        /* 动画效果 */
-        @keyframes fadeInUp {
+        @keyframes modalSlideIn {
             from {
                 opacity: 0;
-                transform: translateY(30px);
+                transform: translateY(-50px);
             }
             to {
                 opacity: 1;
@@ -360,196 +344,222 @@
             }
         }
         
-        .video-card {
-            animation: fadeInUp 0.6s ease forwards;
-        }
-        
-        .video-card:nth-child(1) { animation-delay: 0.1s; }
-        .video-card:nth-child(2) { animation-delay: 0.2s; }
-        .video-card:nth-child(3) { animation-delay: 0.3s; }
-        .video-card:nth-child(4) { animation-delay: 0.4s; }
-        .video-card:nth-child(5) { animation-delay: 0.5s; }
-        .video-card:nth-child(6) { animation-delay: 0.6s; }
-        
-        /* 模态框样式 */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-        }
-        
-        .modal-content {
-            background: white;
-            margin: 5% auto;
-            padding: 30px;
-            border-radius: 20px;
-            width: 90%;
-            max-width: 400px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-        }
-        
         .close {
-            color: #aaa;
-            float: right;
+            position: absolute;
+            right: 20px;
+            top: 20px;
             font-size: 28px;
             font-weight: bold;
             cursor: pointer;
+            color: #aaa;
+            transition: color 0.3s ease;
         }
         
         .close:hover {
-            color: #000;
+            color: #333;
+        }
+        
+        .modal h2 {
+            margin-bottom: 1.5rem;
+            color: #333;
+            text-align: center;
         }
         
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 1.5rem;
         }
         
         .form-group label {
             display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
             color: #333;
         }
         
         .form-group input {
             width: 100%;
             padding: 12px;
-            border: 2px solid #e1e5e9;
+            border: 2px solid #ddd;
             border-radius: 8px;
-            font-size: 16px;
+            font-size: 1rem;
             transition: border-color 0.3s ease;
         }
         
         .form-group input:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #00a1d6;
+            box-shadow: 0 0 0 3px rgba(0, 161, 214, 0.1);
         }
         
-        .login-btn, .register-submit-btn {
-            width: 100%;
-            padding: 12px;
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            color: white;
+        .btn {
+            padding: 12px 24px;
             border: none;
             border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
             cursor: pointer;
-            margin-bottom: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            font-weight: bold;
         }
         
-        .login-btn:hover, .register-submit-btn:hover {
+        .btn-primary {
+            background: linear-gradient(135deg, #00a1d6, #0088b3);
+            color: white;
+        }
+        
+        .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 5px 15px rgba(0, 161, 214, 0.3);
         }
         
-        .register-btn, .back-to-login-btn {
-            width: 100%;
-            padding: 12px;
-            background: rgba(102, 126, 234, 0.1);
-            color: #667eea;
-            border: 2px solid #667eea;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
         }
         
-        .register-btn:hover, .back-to-login-btn:hover {
-            background: rgba(102, 126, 234, 0.2);
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+        
+        /* 加载动画 */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #00a1d6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .video-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .nav-links {
+                gap: 1rem;
+            }
+            
+            .welcome-section h1 {
+                font-size: 2rem;
+            }
+        }
+        
+        /* 滚动条美化 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #00a1d6, #0088b3);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #0088b3, #006699);
         }
     </style>
 </head>
 <body>
+    <div class="bg-animation"></div>
+    
     <nav>
         <div class="container">
-            <a href="/" class="logo">
-                <div class="logo-icon">万</div>
-                万里的秘密基地
-            </a>
+            <a href="/" class="logo">{{ settings.site_name if settings else '万里的秘密基地' }}</a>
             <ul class="nav-links">
-                <li><a href="/">首页</a></li>
-                <li><a href="/upload">上传视频</a></li>
-                {% if current_user.is_authenticated %}
-                    <li><a href="/profile">个人中心</a></li>
-                    {% if current_user.is_admin %}
-                        <li><a href="/admin">管理后台</a></li>
+                <li>
+                    <a href="/" class="{% if request.path == '/' %}active{% endif %}">首页</a>
+                </li>
+                <li>
+                    {% if current_user.is_authenticated %}
+                        <a href="/upload">上传</a>
+                    {% else %}
+                        <a href="#" onclick="showLoginModal(); return false;">上传</a>
                     {% endif %}
+                </li>
+                <li>
+                    <a href="/search" class="{% if request.path.startswith('/search') %}active{% endif %}">搜索</a>
+                </li>
+                {% if current_user.is_authenticated %}
+                    <li><a href="/profile" class="{% if request.path.startswith('/profile') %}active{% endif %}">个人中心</a></li>
+                    {% if current_user.is_admin %}
+                        <li><a href="/admin" class="{% if request.path.startswith('/admin') %}active{% endif %}">管理后台</a></li>
+                    {% endif %}
+                    <li><a href="/logout">退出</a></li>
+                {% else %}
+                    <li><a href="#" onclick="showLoginModal()">登录</a></li>
+                    <li><a href="#" onclick="showRegisterModal()">注册</a></li>
                 {% endif %}
             </ul>
-            <div class="search-box">
-                <form action="/search" method="GET">
-                    <input type="text" name="q" placeholder="搜索视频..." value="{{ request.args.get('q', '') }}">
-                    <button type="submit">搜索</button>
-                </form>
-            </div>
-            <div class="user-menu">
-                {% if current_user.is_authenticated %}
-                    <img src="/static/avatars/{{ current_user.avatar }}" alt="头像" class="user-avatar" onclick="handleAvatarClick()" style="cursor: pointer;">
-                    <a href="/logout">退出</a>
-                {% else %}
-                    <img src="/static/avatars/牛.png" alt="头像" class="user-avatar" onclick="handleAvatarClick()" style="cursor: pointer;">
-                    <a href="/login">登录</a>
-                    <a href="/register">注册</a>
-                {% endif %}
-            </div>
+            {% if current_user.is_authenticated %}
+                <img src="/static/avatars/{{ current_user.avatar|trim }}" alt="头像" class="user-avatar" onclick="handleAvatarClick()">
+            {% else %}
+                <img src="/static/avatars/牛.png" alt="默认头像" class="user-avatar" onclick="handleAvatarClick()">
+            {% endif %}
         </div>
     </nav>
     
     <div class="container">
         <div class="main-content">
-            {% if not videos %}
-                <div class="hero-section">
-                    <h1>欢迎来到万里的秘密基地</h1>
-                    <p>分享你的精彩视频，发现更多有趣内容</p>
-                    <div class="cta-buttons">
-                        <a href="/register" class="cta-btn primary">立即注册</a>
-                        <a href="/upload" class="cta-btn secondary">上传视频</a>
-                    </div>
-                </div>
-            {% else %}
-                <div class="hero-section">
-                    <h1>发现精彩视频</h1>
-                    <p>在万里的秘密基地探索无限可能</p>
-                </div>
-                
-                <div class="video-grid">
-                    {% for video in videos %}
-                        <div class="video-card">
-                            <a href="javascript:void(0)" onclick="handleVideoClick({{ video.id }})">
-                                <div class="video-thumbnail">
-                                    {% if video.thumbnail %}
-                                        <img src="/static/thumbnails/{{ video.thumbnail }}" alt="{{ video.title }}">
-                                    {% else %}
-                                        <img src="/static/thumbnails/壁纸.png" alt="{{ video.title }}">
-                                    {% endif %}
-                                </div>
-                            </a>
-                            <div class="video-info">
-                                <a href="javascript:void(0)" onclick="handleVideoClick({{ video.id }})" style="text-decoration: none;">
-                                    <h3 class="video-title">{{ video.title }}</h3>
-                                </a>
-                                <div class="video-meta">
-                                    <div class="video-author">
-                                        <img src="/static/avatars/{{ video.author.avatar }}" alt="作者头像" class="author-avatar">
-                                        <span>{{ video.author.username }}</span>
-                                    </div>
-                                    <div>
-                                        <span>{{ video.views }} 播放</span>
-                                        <span>•</span>
-                                        <span>{{ video.created_at.strftime('%m-%d') }}</span>
-                                    </div>
-                                </div>
+            <div class="welcome-section">
+                <h1>🎬 欢迎来到万里的秘密基地</h1>
+                <p>分享你的精彩瞬间，发现更多有趣内容</p>
+            </div>
+            
+            <div class="video-grid">
+                {% for video in videos %}
+                <div class="video-card" onclick="handleVideoClick({{ video.id }})">
+                    <img src="/static/thumbnails/{{ video.thumbnail or '壁纸.png' }}" alt="{{ video.title }}" class="video-thumbnail">
+                    <div class="video-info">
+                        <h3 class="video-title">{{ video.title }}</h3>
+                        <div class="video-meta">
+                            <div class="video-author">
+                                <img src="/static/avatars/{{ video.author.avatar|trim }}" alt="作者头像" class="author-avatar">
+                                <span>{{ video.author.username }}</span>
                             </div>
                         </div>
-                    {% endfor %}
+                        <div class="video-stats">
+                            <div class="stat-item">
+                                <span>👁️</span>
+                                <span>{{ video.views }}</span>
+                            </div>
+                            <div class="stat-item">
+                                <span>👍</span>
+                                <span>{{ video.likes }}</span>
+                            </div>
+                            <div class="stat-item">
+                                <span>💬</span>
+                                <span>{{ video.comments|length }}</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            {% endif %}
+                {% endfor %}
+            </div>
+            
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>加载中...</p>
+            </div>
         </div>
     </div>
     
@@ -560,15 +570,14 @@
             <h2>登录</h2>
             <form id="loginForm">
                 <div class="form-group">
-                    <label for="username">用户名</label>
-                    <input type="text" id="username" name="username" required>
+                    <label for="loginUsername">用户名</label>
+                    <input type="text" id="loginUsername" name="username" required>
                 </div>
                 <div class="form-group">
-                    <label for="password">密码</label>
-                    <input type="password" id="password" name="password" required>
+                    <label for="loginPassword">密码</label>
+                    <input type="password" id="loginPassword" name="password" required>
                 </div>
-                <button type="submit" class="login-btn">登录</button>
-                <button type="button" class="register-btn" onclick="showRegisterModal()">注册新账户</button>
+                <button type="submit" class="btn btn-primary">登录</button>
             </form>
         </div>
     </div>
@@ -580,127 +589,121 @@
             <h2>注册</h2>
             <form id="registerForm">
                 <div class="form-group">
-                    <label for="regUsername">用户名</label>
-                    <input type="text" id="regUsername" name="username" required>
+                    <label for="registerUsername">用户名</label>
+                    <input type="text" id="registerUsername" name="username" required>
                 </div>
                 <div class="form-group">
-                    <label for="regEmail">邮箱</label>
-                    <input type="email" id="regEmail" name="email" required>
+                    <label for="registerEmail">邮箱</label>
+                    <input type="email" id="registerEmail" name="email" required>
                 </div>
                 <div class="form-group">
-                    <label for="regPassword">密码</label>
-                    <input type="password" id="regPassword" name="password" required>
+                    <label for="registerPassword">密码</label>
+                    <input type="password" id="registerPassword" name="password" required>
                 </div>
-                <button type="submit" class="register-submit-btn">注册</button>
-                <button type="button" class="back-to-login-btn" onclick="showLoginModal()">返回登录</button>
+                <button type="submit" class="btn btn-primary">注册</button>
+                <button type="button" class="btn btn-secondary" onclick="showLoginModal()">返回登录</button>
             </form>
         </div>
     </div>
     
     <script>
-        const isLoggedIn = {{ 'true' if current_user.is_authenticated else 'false' }};
-        
-        // 处理视频点击
+        // 视频点击处理
         function handleVideoClick(videoId) {
-            if (!isLoggedIn) {
-                showLoginModal();
-            } else {
-                window.location.href = `/video/${videoId}`;
-            }
+            window.location.href = `/video/${videoId}`;
         }
         
-        // 处理头像点击
+        // 头像点击处理
         function handleAvatarClick() {
-            if (!isLoggedIn) {
-                showLoginModal();
-            } else {
+            {% if current_user.is_authenticated %}
                 window.location.href = '/profile';
-            }
+            {% else %}
+                showLoginModal();
+            {% endif %}
         }
         
-        // 显示登录模态框
+        // 模态框控制
         function showLoginModal() {
             document.getElementById('loginModal').style.display = 'block';
         }
         
-        // 关闭登录模态框
         function closeLoginModal() {
             document.getElementById('loginModal').style.display = 'none';
         }
         
-        // 显示注册模态框
         function showRegisterModal() {
-            document.getElementById('loginModal').style.display = 'none';
             document.getElementById('registerModal').style.display = 'block';
+            closeLoginModal();
         }
         
-        // 关闭注册模态框
         function closeRegisterModal() {
             document.getElementById('registerModal').style.display = 'none';
+        }
+        
+        // 点击模态框外部关闭
+        window.onclick = function(event) {
+            const loginModal = document.getElementById('loginModal');
+            const registerModal = document.getElementById('registerModal');
+            if (event.target === loginModal) {
+                closeLoginModal();
+            }
+            if (event.target === registerModal) {
+                closeRegisterModal();
+            }
         }
         
         // 登录表单提交
         document.getElementById('loginForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const formData = new FormData(this);
-            
-            fetch('/login', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => {
-                if (response.redirected) {
-                    window.location.href = response.url;
-                } else {
-                    return response.text();
-                }
-            })
-            .then(data => {
-                if (data) {
-                    alert('登录失败，请检查用户名和密码');
-                }
-            })
-            .catch(error => {
-                console.error('登录失败:', error);
-                alert('登录失败，请稍后重试');
-            });
+            fetch('/login', { method: 'POST', body: formData, headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } })
+            .then(r => r.json())
+            .then(data => { if (data.success) { window.location.href = data.redirect_url; } else { alert(data.message || '登录失败'); } })
+            .catch(() => alert('登录失败'));
         });
         
         // 注册表单提交
         document.getElementById('registerForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const formData = new FormData(this);
-            
-            fetch('/register', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => {
-                if (response.redirected) {
-                    alert('注册成功！请登录');
-                    closeRegisterModal();
-                    showLoginModal();
-                } else {
-                    return response.text();
-                }
-            })
-            .then(data => {
-                if (data) {
-                    alert('注册失败，请检查输入信息');
-                }
-            })
-            .catch(error => {
-                console.error('注册失败:', error);
-                alert('注册失败，请稍后重试');
+            fetch('/register', { method: 'POST', body: formData, headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } })
+            .then(r => r.json())
+            .then(data => { if (data.success) { alert('注册成功！请登录'); closeRegisterModal(); showLoginModal(); } else { alert(data.message || '注册失败'); } })
+            .catch(() => alert('注册失败'));
+        });
+        
+        // 页面加载动画
+        window.addEventListener('load', function() {
+            const cards = document.querySelectorAll('.video-card');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    card.style.transition = 'all 0.5s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 100);
             });
         });
         
-        // 点击模态框外部关闭
-        window.onclick = function(event) {
-            if (event.target.classList.contains('modal')) {
-                event.target.style.display = 'none';
-            }
-        }
+        // 滚动动画
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+        
+        // 观察所有视频卡片
+        document.querySelectorAll('.video-card').forEach(card => {
+            observer.observe(card);
+        });
     </script>
 </body>
 </html>

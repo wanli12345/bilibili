@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ video.title }} - 万里的秘密基地</title>
+    <title>{{ video.title }} - {{ settings.site_name if settings else '万里的秘密基地' }}</title>
     <style>
         * {
             margin: 0;
@@ -15,19 +15,56 @@
             font-family: 'Arial', sans-serif;
             line-height: 1.6;
             color: #333;
-            background: #f4f5f7;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        /* 背景动画 */
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.05;
+        }
+        
+        .bg-animation::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="%23ffffff" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="%23ffffff" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="%23ffffff" opacity="0.1"/><circle cx="10" cy="60" r="0.5" fill="%23ffffff" opacity="0.1"/><circle cx="90" cy="40" r="0.5" fill="%23ffffff" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+            animation: float 20s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
         }
         
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
             padding: 0 20px;
         }
         
+        /* 导航栏美化 */
         nav {
-            background: #00a1d6;
-            padding: 0.5rem 0;
+            background: rgba(0, 161, 214, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 0;
             margin-bottom: 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+        
+        nav:hover {
+            background: rgba(0, 161, 214, 0.98);
         }
         
         nav .container {
@@ -37,55 +74,211 @@
         }
         
         .logo {
-            font-size: 1.5rem;
+            font-size: 1.8rem;
             font-weight: bold;
             color: white;
             text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: transform 0.3s ease;
+        }
+        
+        .logo:hover {
+            transform: scale(1.05);
+        }
+        
+        .logo::before {
+            content: '🎬';
+            font-size: 2rem;
         }
         
         .nav-links {
             display: flex;
             list-style: none;
             align-items: center;
-        }
-        
-        .nav-links li {
-            margin-left: 2rem;
+            gap: 2rem;
         }
         
         .nav-links a {
             color: white;
             text-decoration: none;
-            transition: color 0.3s;
+            padding: 10px 14px;
+            border-radius: 22px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border: none;
+            font-weight: 600;
+        }
+        
+        .nav-links a::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.2);
+            transition: left 0.3s ease;
+        }
+        
+        .nav-links a:hover::before {
+            left: 0;
         }
         
         .nav-links a:hover {
-            color: #ffd700;
+            background: rgba(255, 255, 255, 0.12);
+            transform: translateY(-2px);
+        }
+
+        .nav-links a.active {
+            background: rgba(255, 255, 255, 0.18);
+            border-color: rgba(255, 255, 255, 0.35);
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .user-avatar:hover {
+            transform: scale(1.1);
+            border-color: #ffd700;
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.3);
+        }
+        
+        /* 主要内容区域 */
+        .main-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .video-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
         }
         
         .video-container {
-            background: white;
-            border-radius: 10px;
+            position: relative;
+            width: 100%;
+            border-radius: 15px;
             overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            margin-bottom: 1.5rem;
         }
         
         .video-player {
             width: 100%;
-            height: 0;
-            padding-bottom: 56.25%; /* 16:9 比例 */
-            position: relative;
+            height: 500px;
             background: #000;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .video-player::before {
+            content: '▶️';
+            font-size: 4rem;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 2;
+            opacity: 0.8;
+            transition: opacity 0.3s ease;
+        }
+        
+        .video-player:hover::before {
+            opacity: 1;
         }
         
         .video-player video {
-            position: absolute;
-            top: 0;
-            left: 0;
             width: 100%;
             height: 100%;
             object-fit: cover;
+            border-radius: 15px;
+        }
+        
+        .video-info {
+            padding: 1.5rem 0;
+        }
+        
+        .video-title {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            color: #333;
+            line-height: 1.4;
+        }
+        
+        .video-meta {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .video-author {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+        
+        .author-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 3px solid #00a1d6;
+            transition: transform 0.3s ease;
+        }
+        
+        .author-avatar:hover {
+            transform: scale(1.1);
+        }
+        
+        .author-info h4 {
+            font-size: 1.1rem;
+            margin-bottom: 0.3rem;
+            color: #333;
+        }
+        
+        .author-info p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .video-stats {
+            display: flex;
+            gap: 1.5rem;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
         
         /* 弹幕容器 */
@@ -96,8 +289,8 @@
             width: 100%;
             height: 100%;
             pointer-events: none;
+            z-index: 1;
             overflow: hidden;
-            z-index: 10;
         }
         
         .danmaku {
@@ -105,27 +298,13 @@
             white-space: nowrap;
             font-size: 20px;
             font-weight: bold;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            animation: danmakuMove 8s linear;
             pointer-events: none;
-            user-select: none;
-            animation: danmaku-scroll 8s linear;
         }
         
-        .danmaku.top {
-            animation: none;
-            top: 10%;
-            left: 50%;
-            transform: translateX(-50%);
-        }
-        
-        .danmaku.bottom {
-            animation: none;
-            bottom: 10%;
-            left: 50%;
-            transform: translateX(-50%);
-        }
-        
-        @keyframes danmaku-scroll {
+        @keyframes danmakuMove {
             from {
                 transform: translateX(100%);
             }
@@ -134,382 +313,340 @@
             }
         }
         
-        .video-info {
-            padding: 1.5rem;
+        /* 侧边栏 */
+        .sidebar {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            height: fit-content;
         }
         
-        .video-title {
-            font-size: 1.5rem;
-            font-weight: bold;
-            margin-bottom: 1rem;
-            color: #333;
-        }
-        
-        .video-meta {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid #eee;
-        }
-        
-        .video-stats {
-            display: flex;
-            gap: 1rem;
-            color: #666;
-        }
-        
-        .video-author {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        
-        .author-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-        }
-        
-        .video-description {
-            margin-bottom: 2rem;
-            color: #666;
-            line-height: 1.6;
-        }
-        
-        /* 弹幕发送区域 */
-        .danmaku-send {
-            background: #f8f9fa;
-            padding: 1rem;
-            border-radius: 8px;
-            margin-bottom: 2rem;
-        }
-        
-        .danmaku-send h3 {
-            margin-bottom: 1rem;
-            color: #333;
-        }
-        
-        .danmaku-form {
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-        
-        .danmaku-input {
-            flex: 1;
-            min-width: 200px;
-            padding: 0.5rem;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 14px;
-        }
-        
-        .danmaku-type {
-            padding: 0.5rem;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 14px;
-        }
-        
-        .danmaku-color {
-            width: 40px;
-            height: 35px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        
-        .danmaku-send-btn {
-            padding: 0.5rem 1rem;
-            background: #00a1d6;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        
-        .danmaku-send-btn:hover {
-            background: #0091c2;
-        }
-        
-        .danmaku-send-btn:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-        }
-        
-        /* 三连按钮样式 */
-        .video-actions {
-            margin-top: 1rem;
-            display: flex;
-            gap: 1rem;
-        }
-        
-        .triple-like-btn {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.5rem 1rem;
-            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
-            color: white;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: bold;
-            transition: all 0.3s ease;
-        }
-        
-        .triple-like-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
-        }
-        
-        .triple-like-btn:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-        
-        .triple-icon {
-            font-size: 16px;
-        }
-        
-        /* 操作按钮样式 */
         .action-buttons {
             display: flex;
+            flex-direction: column;
             gap: 1rem;
-            margin-bottom: 1rem;
+            margin-bottom: 2rem;
         }
         
         .action-btn {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-            padding: 0.5rem 1rem;
+            gap: 0.8rem;
+            padding: 1rem 1.5rem;
             border: none;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 14px;
+            border-radius: 12px;
+            font-size: 1rem;
             font-weight: bold;
+            cursor: pointer;
             transition: all 0.3s ease;
-        }
-        
-        .like-btn {
-            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
-            color: white;
-        }
-        
-        .coin-btn {
-            background: linear-gradient(45deg, #ffd700, #ffb347);
-            color: white;
-        }
-        
-        .follow-btn {
-            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            text-decoration: none;
             color: white;
         }
         
         .action-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
         }
         
-        .action-btn:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
+        .like-btn {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
         }
         
-        .btn-icon {
-            font-size: 16px;
+        .coin-btn {
+            background: linear-gradient(135deg, #ffd700, #ffb347);
         }
         
-        /* 投币模态框样式 */
-        .coin-submit-btn {
-            padding: 0.5rem 1rem;
-            background: linear-gradient(45deg, #ffd700, #ffb347);
+        .follow-btn {
+            background: linear-gradient(135deg, #4ecdc4, #44a08d);
+        }
+        
+        .triple-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .triple-btn::before {
+            content: '🎉';
+            position: absolute;
+            right: 1rem;
+            font-size: 1.2rem;
+            animation: bounce 2s infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+        
+        /* 弹幕输入区域 */
+        .danmaku-input {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 15px;
+        }
+        
+        .danmaku-input h3 {
+            margin-bottom: 1rem;
+            color: #333;
+            font-size: 1.2rem;
+        }
+        
+        .danmaku-form {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .danmaku-text {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+        
+        .danmaku-text:focus {
+            outline: none;
+            border-color: #00a1d6;
+            box-shadow: 0 0 0 3px rgba(0, 161, 214, 0.1);
+        }
+        
+        .danmaku-type {
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            background: white;
+        }
+        
+        .danmaku-color {
+            width: 50px;
+            height: 40px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        
+        .danmaku-color:hover {
+            transform: scale(1.1);
+        }
+        
+        .send-danmaku {
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #00a1d6, #0088b3);
             color: white;
             border: none;
-            border-radius: 4px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
             cursor: pointer;
-            font-size: 14px;
+            transition: all 0.3s ease;
         }
         
-        .coin-submit-btn:hover {
-            background: linear-gradient(45deg, #ffb347, #ffd700);
+        .send-danmaku:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 161, 214, 0.3);
         }
         
-        /* 三连特效 */
-        @keyframes tripleEffect {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.2); }
-            100% { transform: scale(1); }
+        /* 投币模态框 */
+        .coin-modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
         }
         
-        .triple-effect {
-            animation: tripleEffect 0.5s ease;
+        .coin-modal-content {
+            background: white;
+            margin: 10% auto;
+            padding: 2rem;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 400px;
+            position: relative;
+            animation: modalSlideIn 0.3s ease;
         }
         
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .close-coin-modal {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #aaa;
+            transition: color 0.3s ease;
+        }
+        
+        .close-coin-modal:hover {
+            color: #333;
+        }
+        
+        .coin-options {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+        
+        .coin-option {
+            padding: 1rem;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+        }
+        
+        .coin-option:hover {
+            border-color: #ffd700;
+            background: #fff9e6;
+            transform: translateY(-2px);
+        }
+        
+        .coin-option.selected {
+            border-color: #ffd700;
+            background: #fff9e6;
+            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.3);
+        }
+        
+        .coin-amount {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #ffd700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .coin-label {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        /* 烟花效果 */
         .fireworks {
             position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 1000;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             pointer-events: none;
+            z-index: 3000;
         }
         
         .firework {
             position: absolute;
-            width: 10px;
-            height: 10px;
+            width: 4px;
+            height: 4px;
             border-radius: 50%;
             animation: firework 1s ease-out forwards;
         }
         
         @keyframes firework {
             0% {
-                transform: translate(0, 0) scale(1);
+                transform: scale(0);
                 opacity: 1;
             }
             100% {
-                transform: translate(var(--x), var(--y)) scale(0);
+                transform: scale(20);
                 opacity: 0;
             }
         }
         
-        /* 评论区域 */
-        .comments-section {
-            background: white;
-            border-radius: 10px;
-            padding: 1.5rem;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        
-        .comments-section h3 {
-            margin-bottom: 1rem;
-            color: #333;
-        }
-        
-        .comment-form {
-            margin-bottom: 2rem;
-        }
-        
-        .comment-textarea {
-            width: 100%;
-            padding: 1rem;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            resize: vertical;
-            min-height: 100px;
-            font-family: inherit;
-            font-size: 14px;
-        }
-        
-        .comment-submit {
-            margin-top: 1rem;
-            padding: 0.5rem 1rem;
-            background: #00a1d6;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        
-        .comment-submit:hover {
-            background: #0091c2;
-        }
-        
-        .comments-list {
-            margin-top: 2rem;
-        }
-        
-        .comment-item {
-            padding: 1rem 0;
-            border-bottom: 1px solid #eee;
-        }
-        
-        .comment-item:last-child {
-            border-bottom: none;
-        }
-        
-        .comment-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 0.5rem;
-        }
-        
-        .comment-author {
-            font-weight: bold;
-            color: #333;
-        }
-        
-        .comment-time {
-            font-size: 0.8rem;
-            color: #666;
-        }
-        
-        .comment-content {
-            color: #333;
-            line-height: 1.5;
-        }
-        
-        .login-prompt {
-            text-align: center;
-            padding: 2rem;
-            color: #666;
-        }
-        
-        .login-prompt a {
-            color: #00a1d6;
-            text-decoration: none;
-        }
-        
-        .login-prompt a:hover {
-            text-decoration: underline;
-        }
-        
         /* 响应式设计 */
         @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .video-player {
+                height: 300px;
+            }
+            
             .video-meta {
                 flex-direction: column;
-                align-items: flex-start;
                 gap: 1rem;
             }
             
-            .video-stats {
-                gap: 1rem;
+            .action-buttons {
+                flex-direction: row;
+                flex-wrap: wrap;
             }
             
-            .danmaku-form {
-                flex-direction: column;
-                align-items: stretch;
+            .action-btn {
+                flex: 1;
+                min-width: 120px;
             }
-            
-            .danmaku-input {
-                min-width: auto;
-            }
+        }
+        
+        /* 滚动条美化 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #00a1d6, #0088b3);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #0088b3, #006699);
         }
     </style>
 </head>
 <body>
+    <div class="bg-animation"></div>
+    
     <nav>
         <div class="container">
             <a href="/" class="logo">万里的秘密基地</a>
             <ul class="nav-links">
+                <li>
+                    <a href="/" class="{% if request.path == '/' %}active{% endif %}">首页</a>
+                </li>
+                <li>
+                    {% if current_user.is_authenticated %}
+                        <a href="/upload">上传</a>
+                    {% else %}
+                        <a href="/login">上传</a>
+                    {% endif %}
+                </li>
+                <li>
+                    <a href="/search" class="{% if request.path.startswith('/search') %}active{% endif %}">搜索</a>
+                </li>
                 {% if current_user.is_authenticated %}
-                    <li><a href="/upload">上传视频</a></li>
-                    <li><a href="/profile">个人中心</a></li>
+                    <li><a href="/profile" class="{% if request.path.startswith('/profile') %}active{% endif %}">个人中心</a></li>
                     {% if current_user.is_admin %}
-                        <li><a href="/admin">管理后台</a></li>
+                        <li><a href="/admin" class="{% if request.path.startswith('/admin') %}active{% endif %}">管理后台</a></li>
                     {% endif %}
                     <li><a href="/logout">退出</a></li>
                 {% else %}
@@ -517,348 +654,146 @@
                     <li><a href="/register">注册</a></li>
                 {% endif %}
             </ul>
+            {% if current_user.is_authenticated %}
+                <img src="/static/avatars/{{ current_user.avatar }}" alt="头像" class="user-avatar" onclick="window.location.href='/profile'">
+            {% else %}
+                <img src="/static/avatars/牛.png" alt="默认头像" class="user-avatar" onclick="window.location.href='/login'">
+            {% endif %}
         </div>
     </nav>
     
     <div class="container">
-        <div class="video-container">
-            <div class="video-player">
-                <video id="videoPlayer" controls>
-                    <source src="/static/uploads/{{ video.filename }}" type="video/mp4">
-                    您的浏览器不支持视频播放。
-                </video>
-                <div id="danmakuContainer" class="danmaku-container"></div>
-            </div>
-            
-            <div class="video-info">
-                <h1 class="video-title">{{ video.title }}</h1>
-                
-                <div class="video-meta">
-                    <div class="video-stats">
-                        <span>{{ video.views }} 播放</span>
-                        <span>{{ video.likes }} 点赞</span>
-                        <span>{{ video.triple_likes }} 三连</span>
-                        <span>{{ video.created_at.strftime('%Y-%m-%d') }}</span>
-                    </div>
-                    
-                    <div class="video-author">
-                        <img src="/static/avatars/{{ video.author.avatar }}" alt="作者头像" class="author-avatar">
-                        <span>{{ video.author.username }}</span>
+        <div class="main-content">
+            <div class="video-section">
+                <div class="video-container">
+                    <div class="video-player" onclick="toggleVideo()">
+                        <video id="videoPlayer" controls>
+                            <source src="/static/uploads/{{ video.filename }}" type="video/mp4">
+                            您的浏览器不支持视频播放。
+                        </video>
+                        <div class="danmaku-container" id="danmakuContainer"></div>
                     </div>
                 </div>
                 
-                <div class="video-actions">
-                    <div class="action-buttons">
-                        <button id="likeBtn" class="action-btn like-btn" onclick="likeUser()">
-                            <span class="btn-icon">👍</span>
-                            点赞
-                        </button>
-                        <button id="coinBtn" class="action-btn coin-btn" onclick="showCoinModal()">
-                            <span class="btn-icon">🪙</span>
-                            投币
-                        </button>
-                        <button id="followBtn" class="action-btn follow-btn" onclick="followUser()">
-                            <span class="btn-icon">👁️</span>
-                            关注
-                        </button>
+                <div class="video-info">
+                    <h1 class="video-title">{{ video.title }}</h1>
+                    <div class="video-meta">
+                        <div class="video-author">
+                            <img src="/static/avatars/{{ video.author.avatar|trim }}" alt="作者头像" class="author-avatar">
+                            <div class="author-info">
+                                <h4>{{ video.author.username }}</h4>
+                                <p>{{ video.created_at.strftime('%Y-%m-%d') }}</p>
+                            </div>
+                        </div>
+                        <div class="video-stats">
+                            <div class="stat-item">
+                                <span>👁️</span>
+                                <span>{{ video.views }} 播放</span>
+                            </div>
+                            <div class="stat-item">
+                                <span>👍</span>
+                                <span>{{ video.likes }} 点赞</span>
+                            </div>
+                            <div class="stat-item">
+                                <span>💬</span>
+                                <span>{{ video.comments|length }} 评论</span>
+                            </div>
+                        </div>
                     </div>
-                    <button id="tripleLikeBtn" class="triple-like-btn" onclick="tripleLike()">
-                        <span class="triple-icon">🎉</span>
-                        一键三连
+                </div>
+            </div>
+            
+            <div class="sidebar">
+                <div class="action-buttons">
+                    <button class="action-btn like-btn" onclick="likeUser({{ video.author.id }})">
+                        <span>👍</span>
+                        <span>点赞</span>
+                    </button>
+                    
+                    <button class="action-btn coin-btn" onclick="showCoinModal()">
+                        <span>🪙</span>
+                        <span>投币</span>
+                    </button>
+                    
+                    <button class="action-btn follow-btn" onclick="followUser({{ video.author.id }})">
+                        <span>👥</span>
+                        <span>关注</span>
+                    </button>
+                    
+                    <button class="action-btn triple-btn" onclick="tripleLike({{ video.id }})">
+                        <span>🎉</span>
+                        <span>一键三连</span>
                     </button>
                 </div>
                 
-                <!-- 投币模态框 -->
-                <div id="coinModal" class="modal">
-                    <div class="modal-content">
-                        <span class="close" onclick="closeCoinModal()">&times;</span>
-                        <h3>投币给 {{ video.author.username }}</h3>
-                        <p>您当前有 <span id="myCoins">{{ current_user.wanli_coins if current_user.is_authenticated else 0 }}</span> 个万里币</p>
-                        <div class="form-group">
-                            <label for="coinAmount">投币数量:</label>
-                            <input type="number" id="coinAmount" min="1" max="{{ current_user.wanli_coins if current_user.is_authenticated else 0 }}" value="1">
-                        </div>
-                        <button onclick="coinUser()" class="coin-submit-btn">确认投币</button>
+                <div class="danmaku-input">
+                    <h3>发送弹幕</h3>
+                    <div class="danmaku-form">
+                        <input type="text" id="danmakuText" class="danmaku-text" placeholder="输入弹幕内容...">
+                        <select id="danmakuType" class="danmaku-type">
+                            <option value="scroll">滚动</option>
+                            <option value="top">顶部</option>
+                            <option value="bottom">底部</option>
+                        </select>
+                        <input type="color" id="danmakuColor" class="danmaku-color" value="#ffffff">
+                        <button onclick="sendDanmaku()" class="send-danmaku">发送</button>
                     </div>
                 </div>
-                
-                {% if video.description %}
-                    <div class="video-description">
-                        {{ video.description }}
-                    </div>
-                {% endif %}
-            </div>
-        </div>
-        
-        <!-- 弹幕发送区域 -->
-        {% if current_user.is_authenticated %}
-            <div class="danmaku-send">
-                <h3>发送弹幕</h3>
-                <div class="danmaku-form">
-                    <input type="text" id="danmakuInput" class="danmaku-input" placeholder="输入弹幕内容..." maxlength="50">
-                    <select id="danmakuType" class="danmaku-type">
-                        <option value="scroll">滚动弹幕</option>
-                        <option value="top">顶部弹幕</option>
-                        <option value="bottom">底部弹幕</option>
-                    </select>
-                    <input type="color" id="danmakuColor" class="danmaku-color" value="#ffffff">
-                    <button id="danmakuSendBtn" class="danmaku-send-btn">发送弹幕</button>
-                </div>
-            </div>
-        {% else %}
-            <div class="login-prompt">
-                <p>请 <a href="/login">登录</a> 后发送弹幕</p>
-            </div>
-        {% endif %}
-        
-        <!-- 评论区域 -->
-        <div class="comments-section">
-            <h3>评论</h3>
-            
-            {% if current_user.is_authenticated %}
-                <div class="comment-form">
-                    <textarea id="commentTextarea" class="comment-textarea" placeholder="写下你的评论..."></textarea>
-                    <button id="commentSubmitBtn" class="comment-submit">发表评论</button>
-                </div>
-            {% else %}
-                <div class="login-prompt">
-                    <p>请 <a href="/login">登录</a> 后发表评论</p>
-                </div>
-            {% endif %}
-            
-            <div id="commentsList" class="comments-list">
-                {% for comment in comments %}
-                    <div class="comment-item">
-                        <div class="comment-header">
-                            <span class="comment-author">{{ comment.author.username }}</span>
-                            <span class="comment-time">{{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
-                        </div>
-                        <div class="comment-content">{{ comment.content }}</div>
-                    </div>
-                {% endfor %}
             </div>
         </div>
     </div>
-
+    
+    <!-- 投币模态框 -->
+    <div id="coinModal" class="coin-modal">
+        <div class="coin-modal-content">
+            <span class="close-coin-modal" onclick="closeCoinModal()">&times;</span>
+            <h2>投币给 {{ video.author.username }}</h2>
+            <p>选择投币数量：</p>
+            <div class="coin-options">
+                <div class="coin-option" onclick="selectCoin(1)">
+                    <div class="coin-amount">1</div>
+                    <div class="coin-label">万里币</div>
+                </div>
+                <div class="coin-option" onclick="selectCoin(2)">
+                    <div class="coin-amount">2</div>
+                    <div class="coin-label">万里币</div>
+                </div>
+                <div class="coin-option" onclick="selectCoin(5)">
+                    <div class="coin-amount">5</div>
+                    <div class="coin-label">万里币</div>
+                </div>
+            </div>
+            <button onclick="coinUser({{ video.author.id }})" class="send-danmaku" style="width: 100%;">确认投币</button>
+        </div>
+    </div>
+    
     <script>
-        const video = document.getElementById('videoPlayer');
-        const danmakuContainer = document.getElementById('danmakuContainer');
-        const danmakuInput = document.getElementById('danmakuInput');
-        const danmakuType = document.getElementById('danmakuType');
-        const danmakuColor = document.getElementById('danmakuColor');
-        const danmakuSendBtn = document.getElementById('danmakuSendBtn');
-        const commentTextarea = document.getElementById('commentTextarea');
-        const commentSubmitBtn = document.getElementById('commentSubmitBtn');
-        const commentsList = document.getElementById('commentsList');
+        let selectedCoinAmount = 1;
+        let videoPlayer = document.getElementById('videoPlayer');
+        let danmakuContainer = document.getElementById('danmakuContainer');
         
-        let danmakus = [];
-        let isLoggedIn = {{ 'true' if current_user.is_authenticated else 'false' }};
-        
-        // 加载弹幕
-        function loadDanmakus() {
-            fetch(`/danmaku/{{ video.id }}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        danmakus = data.danmakus;
-                    }
-                });
-        }
-        
-        // 创建弹幕元素
-        function createDanmakuElement(danmaku) {
-            const danmakuEl = document.createElement('div');
-            danmakuEl.className = `danmaku ${danmaku.type}`;
-            danmakuEl.textContent = danmaku.content;
-            danmakuEl.style.color = danmaku.color;
-            
-            if (danmaku.type === 'scroll') {
-                danmakuEl.style.top = Math.random() * 60 + 10 + '%';
-            }
-            
-            return danmakuEl;
-        }
-        
-        // 显示弹幕
-        function showDanmaku(danmaku) {
-            const danmakuEl = createDanmakuElement(danmaku);
-            danmakuContainer.appendChild(danmakuEl);
-            
-            // 滚动弹幕动画结束后移除元素
-            if (danmaku.type === 'scroll') {
-                setTimeout(() => {
-                    if (danmakuEl.parentNode) {
-                        danmakuEl.parentNode.removeChild(danmakuEl);
-                    }
-                }, 8000);
+        // 视频播放控制
+        function toggleVideo() {
+            if (videoPlayer.paused) {
+                videoPlayer.play();
             } else {
-                // 顶部和底部弹幕显示3秒后移除
-                setTimeout(() => {
-                    if (danmakuEl.parentNode) {
-                        danmakuEl.parentNode.removeChild(danmakuEl);
-                    }
-                }, 3000);
+                videoPlayer.pause();
             }
         }
         
-        // 发送弹幕
-        function sendDanmaku() {
-            if (!isLoggedIn) {
-                alert('请先登录');
-                return;
-            }
-            
-            const content = danmakuInput.value.trim();
-            if (!content) {
-                alert('请输入弹幕内容');
-                return;
-            }
-            
-            if (content.length > 50) {
-                alert('弹幕内容不能超过50个字符');
-                return;
-            }
-            
-            const currentTime = video.currentTime;
-            const type = danmakuType.value;
-            const color = danmakuColor.value;
-            
-            const formData = new FormData();
-            formData.append('content', content);
-            formData.append('video_id', '{{ video.id }}');
-            formData.append('time', currentTime);
-            formData.append('type', type);
-            formData.append('color', color);
-            
-            fetch('/danmaku', {
-                method: 'POST',
-                body: formData
+        // 点赞用户（兼容未登录时的重定向）
+        function likeUser(userId) {
+            fetch(`/like_user/${userId}`, { method: 'POST' })
+            .then(r => {
+                if (r.redirected) { window.location.href = r.url; return null; }
+                return r.json();
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    danmakuInput.value = '';
-                    showDanmaku(data.danmaku);
-                } else {
-                    alert(data.message);
-                }
-            })
-            .catch(error => {
-                console.error('发送弹幕失败:', error);
-                alert('发送弹幕失败');
-            });
-        }
-        
-        // 发送评论
-        function sendComment() {
-            if (!isLoggedIn) {
-                alert('请先登录');
-                return;
-            }
-            
-            const content = commentTextarea.value.trim();
-            if (!content) {
-                alert('请输入评论内容');
-                return;
-            }
-            
-            const formData = new FormData();
-            formData.append('content', content);
-            formData.append('video_id', '{{ video.id }}');
-            
-            fetch('/comment', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    commentTextarea.value = '';
-                    
-                    // 添加新评论到列表
-                    const commentItem = document.createElement('div');
-                    commentItem.className = 'comment-item';
-                    commentItem.innerHTML = `
-                        <div class="comment-header">
-                            <span class="comment-author">${data.comment.author}</span>
-                            <span class="comment-time">${data.comment.created_at}</span>
-                        </div>
-                        <div class="comment-content">${data.comment.content}</div>
-                    `;
-                    commentsList.insertBefore(commentItem, commentsList.firstChild);
-                } else {
-                    alert(data.message);
-                }
-            })
-            .catch(error => {
-                console.error('发送评论失败:', error);
-                alert('发送评论失败');
-            });
-        }
-        
-        // 事件监听
-        if (danmakuSendBtn) {
-            danmakuSendBtn.addEventListener('click', sendDanmaku);
-            danmakuInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    sendDanmaku();
-                }
-            });
-        }
-        
-        if (commentSubmitBtn) {
-            commentSubmitBtn.addEventListener('click', sendComment);
-        }
-        
-        // 视频播放时显示弹幕
-        video.addEventListener('timeupdate', function() {
-            const currentTime = video.currentTime;
-            danmakus.forEach(danmaku => {
-                if (Math.abs(danmaku.time - currentTime) < 0.5 && !danmaku.shown) {
-                    danmaku.shown = true;
-                    showDanmaku(danmaku);
-                }
-            });
-        });
-        
-        // 页面加载时获取弹幕
-        loadDanmakus();
-        
-        // 点赞功能
-        function likeUser() {
-            if (!isLoggedIn) {
-                alert('请先登录');
-                return;
-            }
-            
-            fetch(`/like_user/{{ video.author.id }}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    alert(data.message);
-                    document.getElementById('likeBtn').disabled = true;
-                    document.getElementById('likeBtn').textContent = '已点赞';
-                } else {
-                    alert(data.message);
-                }
-            })
-            .catch(error => {
-                console.error('点赞失败:', error);
-                alert('点赞失败，请稍后重试');
-            });
+            .then(data => { if (!data) return; if (data.status === 'success') alert('点赞成功！'); else alert(data.message || '点赞失败'); })
+            .catch(() => alert('点赞失败'));
         }
         
         // 显示投币模态框
         function showCoinModal() {
-            if (!isLoggedIn) {
-                alert('请先登录');
-                return;
-            }
             document.getElementById('coinModal').style.display = 'block';
         }
         
@@ -867,151 +802,160 @@
             document.getElementById('coinModal').style.display = 'none';
         }
         
-        // 投币功能
-        function coinUser() {
-            const amount = parseInt(document.getElementById('coinAmount').value);
-            if (!amount || amount <= 0) {
-                alert('请输入有效的投币数量');
-                return;
-            }
-            
+        // 选择投币数量
+        function selectCoin(amount) {
+            selectedCoinAmount = amount;
+            document.querySelectorAll('.coin-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            event.target.closest('.coin-option').classList.add('selected');
+        }
+        
+        // 投币给用户（后端接收表单字段 amount）
+        function coinUser(userId) {
+            const form = new FormData();
+            form.append('amount', String(selectedCoinAmount));
+            fetch(`/coin_user/${userId}`, { method: 'POST', body: form })
+            .then(r => { if (r.redirected) { window.location.href = r.url; return null; } return r.json(); })
+            .then(data => { if (!data) return; if (data.status === 'success') { alert(`投币成功！已投出 ${selectedCoinAmount} 个万里币`); closeCoinModal(); } else { alert(data.message || '投币失败'); } })
+            .catch(() => alert('投币失败'));
+        }
+        
+        // 关注/取关（兼容未登录重定向）
+        function followUser(userId) {
+            fetch(`/follow_user/${userId}`, { method: 'POST' })
+            .then(r => { if (r.redirected) { window.location.href = r.url; return null; } return r.json(); })
+            .then(data => { if (!data) return; alert(data.message || (data.status === 'success' ? '操作成功' : '关注失败')); })
+            .catch(() => alert('关注失败'));
+        }
+        
+        // 发送弹幕（对齐后端字段）
+        function sendDanmaku() {
+            const text = document.getElementById('danmakuText').value.trim();
+            const type = document.getElementById('danmakuType').value;
+            const color = document.getElementById('danmakuColor').value;
+            if (!text) { alert('请输入弹幕内容'); return; }
             const formData = new FormData();
-            formData.append('amount', amount);
-            
-            fetch(`/coin_user/{{ video.author.id }}`, {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
+            formData.append('content', text);
+            formData.append('video_id', String({{ video.id }}));
+            formData.append('time', String(videoPlayer.currentTime || 0));
+            formData.append('type', type);
+            formData.append('color', color);
+            fetch('/danmaku', { method: 'POST', body: formData })
+            .then(r => r.json())
             .then(data => {
                 if (data.status === 'success') {
-                    alert(data.message);
-                    document.getElementById('myCoins').textContent = data.my_coins;
-                    closeCoinModal();
-                    document.getElementById('coinBtn').disabled = true;
-                    document.getElementById('coinBtn').textContent = '已投币';
+                    displayDanmaku(text, type, color);
+                    document.getElementById('danmakuText').value = '';
                 } else {
-                    alert(data.message);
+                    alert(data.message || '弹幕发送失败');
                 }
             })
-            .catch(error => {
-                console.error('投币失败:', error);
-                alert('投币失败，请稍后重试');
-            });
+            .catch(() => alert('弹幕发送失败'));
         }
         
-        // 关注功能
-        function followUser() {
-            if (!isLoggedIn) {
-                alert('请先登录');
-                return;
+        // 显示弹幕
+        function displayDanmaku(text, type, color) {
+            const danmaku = document.createElement('div');
+            danmaku.className = 'danmaku';
+            danmaku.textContent = text;
+            danmaku.style.color = color;
+            
+            if (type === 'scroll') {
+                danmaku.style.top = Math.random() * 80 + 10 + '%';
+                danmaku.style.animation = 'danmakuMove 8s linear';
+            } else if (type === 'top') {
+                danmaku.style.top = '10%';
+                danmaku.style.left = '50%';
+                danmaku.style.transform = 'translateX(-50%)';
+                danmaku.style.animation = 'none';
+            } else if (type === 'bottom') {
+                danmaku.style.bottom = '10%';
+                danmaku.style.left = '50%';
+                danmaku.style.transform = 'translateX(-50%)';
+                danmaku.style.animation = 'none';
             }
             
-            fetch(`/follow_user/{{ video.author.id }}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
+            danmakuContainer.appendChild(danmaku);
+            
+            // 8秒后移除弹幕
+            setTimeout(() => {
+                if (danmaku.parentNode) {
+                    danmaku.parentNode.removeChild(danmaku);
                 }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    alert(data.message);
-                    const btn = document.getElementById('followBtn');
-                    if (data.is_following) {
-                        btn.textContent = '已关注';
-                        btn.style.background = '#ccc';
-                    } else {
-                        btn.textContent = '关注';
-                        btn.style.background = 'linear-gradient(45deg, #4ecdc4, #44a08d)';
-                    }
-                } else {
-                    alert(data.message);
-                }
-            })
-            .catch(error => {
-                console.error('关注失败:', error);
-                alert('关注失败，请稍后重试');
-            });
+            }, 8000);
         }
         
-        // 创建烟花特效
+        // 一键三连（兼容未登录重定向）
+        function tripleLike(videoId) {
+            createFireworks();
+            fetch(`/triple_like/${videoId}`, { method: 'POST' })
+            .then(r => { if (r.redirected) { window.location.href = r.url; return null; } return r.json(); })
+            .then(data => { if (!data) return; if (data.status === 'success') alert('三连成功！🎉'); else alert(data.message || '三连失败'); })
+            .catch(() => alert('三连失败'));
+        }
+        
+        // 创建烟花效果
         function createFireworks() {
             const fireworks = document.createElement('div');
             fireworks.className = 'fireworks';
             document.body.appendChild(fireworks);
             
-            const colors = ['#ff6b6b', '#ffd700', '#4ecdc4', '#ffb347', '#ee5a24'];
-            
-            for (let i = 0; i < 20; i++) {
-                const firework = document.createElement('div');
-                firework.className = 'firework';
-                firework.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-                firework.style.setProperty('--x', `${(Math.random() - 0.5) * 200}px`);
-                firework.style.setProperty('--y', `${(Math.random() - 0.5) * 200}px`);
-                fireworks.appendChild(firework);
+            for (let i = 0; i < 50; i++) {
+                setTimeout(() => {
+                    const firework = document.createElement('div');
+                    firework.className = 'firework';
+                    firework.style.left = Math.random() * 100 + '%';
+                    firework.style.top = Math.random() * 100 + '%';
+                    firework.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+                    fireworks.appendChild(firework);
+                    
+                    setTimeout(() => {
+                        if (firework.parentNode) {
+                            firework.parentNode.removeChild(firework);
+                        }
+                    }, 1000);
+                }, i * 50);
             }
             
             setTimeout(() => {
-                document.body.removeChild(fireworks);
-            }, 1000);
+                if (fireworks.parentNode) {
+                    fireworks.parentNode.removeChild(fireworks);
+                }
+            }, 3000);
         }
         
-        // 三连功能
-        function tripleLike() {
-            if (!isLoggedIn) {
-                alert('请先登录');
-                return;
-            }
-            
-            const btn = document.getElementById('tripleLikeBtn');
-            btn.disabled = true;
-            
-            // 添加特效
-            btn.classList.add('triple-effect');
-            createFireworks();
-            
-            // 执行三个操作
-            Promise.all([
-                fetch(`/like_user/{{ video.author.id }}`, { method: 'POST' }),
-                fetch(`/coin_user/{{ video.author.id }}`, { 
-                    method: 'POST', 
-                    body: new FormData().append('amount', 1)
-                }),
-                fetch(`/follow_user/{{ video.author.id }}`, { method: 'POST' }),
-                fetch(`/triple_like/{{ video.id }}`, { method: 'POST' })
-            ])
-            .then(responses => Promise.all(responses.map(r => r.json())))
-            .then(results => {
-                alert('一键三连成功！🎉');
-                // 更新按钮状态
-                document.getElementById('likeBtn').disabled = true;
-                document.getElementById('likeBtn').textContent = '已点赞';
-                document.getElementById('coinBtn').disabled = true;
-                document.getElementById('coinBtn').textContent = '已投币';
-                document.getElementById('followBtn').textContent = '已关注';
-                document.getElementById('followBtn').style.background = '#ccc';
-                btn.textContent = '已三连';
-                btn.style.background = '#ccc';
-                
-                // 更新显示的三连数量
-                const stats = document.querySelector('.video-stats');
-                const tripleSpan = stats.querySelector('span:nth-child(3)');
-                if (tripleSpan) {
-                    const currentLikes = parseInt(tripleSpan.textContent) || 0;
-                    tripleSpan.textContent = `${currentLikes + 1} 三连`;
+        // 加载历史弹幕
+        function loadDanmaku() {
+            fetch(`/danmaku/{{ video.id }}`)
+            .then(r => r.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    data.danmakus.forEach(d => displayDanmaku(d.content, d.type, d.color));
                 }
             })
-            .catch(error => {
-                console.error('三连失败:', error);
-                alert('三连失败，请稍后重试');
-                btn.disabled = false;
-            });
-            
-            setTimeout(() => {
-                btn.classList.remove('triple-effect');
-            }, 500);
+            .catch(() => {});
         }
+        
+        // 页面加载时加载弹幕
+        window.addEventListener('load', function() {
+            loadDanmaku();
+        });
+        
+        // 点击模态框外部关闭
+        window.onclick = function(event) {
+            const modal = document.getElementById('coinModal');
+            if (event.target === modal) {
+                closeCoinModal();
+            }
+        }
+        
+        // 回车发送弹幕
+        document.getElementById('danmakuText').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendDanmaku();
+            }
+        });
     </script>
 </body>
 </html> 

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>站点设置 - 管理后台</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; background: #f5f7fb; color: #333; }
+    .container { max-width: 900px; margin: 40px auto; padding: 0 20px; }
+    .card { background: #fff; border-radius: 14px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,.06); margin-bottom: 20px; }
+    h1 { font-size: 22px; margin-bottom: 14px; }
+    .desc { color: #666; margin-bottom: 10px; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    label { display: block; font-weight: 600; margin-bottom: 8px; }
+    input[type="text"], input[type="color"] { width: 100%; padding: 12px; border: 2px solid #e6e9f0; border-radius: 10px; font-size: 14px; }
+    .row { margin-bottom: 16px; }
+    .actions { display: flex; gap: 10px; }
+    .btn { padding: 10px 16px; border: none; border-radius: 10px; cursor: pointer; font-weight: 700; }
+    .btn-primary { background: #00a1d6; color: #fff; }
+    .btn-secondary { background: #6c757d; color: #fff; }
+    .btn-danger { background: #dc3545; color: #fff; }
+    .preview { border-radius: 12px; overflow: hidden; border: 2px dashed #e6e9f0; padding: 12px; text-align: center; }
+    .preview img { max-width: 100%; border-radius: 10px; }
+    nav { display:flex; justify-content: space-between; align-items:center; margin-bottom: 20px; }
+    a.link { color:#00a1d6; text-decoration:none; font-weight:700; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav>
+      <a class="link" href="/admin">← 返回管理后台</a>
+      <a class="link" href="/">返回首页</a>
+    </nav>
+
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        {% for message in messages %}
+          <div class="card" style="background:#d4edda; color:#155724; border:1px solid #c3e6cb;">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <div class="card">
+      <h1>基础信息</h1>
+      <p class="desc">自定义站点名称与页面标题（title）。</p>
+      <form method="POST" action="/admin/settings">
+        <div class="row">
+          <label for="site_name">站点名称</label>
+          <input id="site_name" name="site_name" type="text" value="{{ settings.site_name }}" placeholder="例如：万里的秘密基地" required />
+        </div>
+        <div class="row">
+          <label for="page_title">首页Title（可选）</label>
+          <input id="page_title" name="page_title" type="text" value="{{ settings.page_title or '' }}" placeholder="浏览器标签页显示标题" />
+        </div>
+        <div class="grid">
+          <div>
+            <label for="homepage_bg_color1">首页背景渐变色1</label>
+            <input id="homepage_bg_color1" name="homepage_bg_color1" type="color" value="{{ settings.homepage_bg_color1 }}" />
+          </div>
+          <div>
+            <label for="homepage_bg_color2">首页背景渐变色2</label>
+            <input id="homepage_bg_color2" name="homepage_bg_color2" type="color" value="{{ settings.homepage_bg_color2 }}" />
+          </div>
+        </div>
+        <div class="actions" style="margin-top: 12px;">
+          <button class="btn btn-primary" type="submit">保存设置</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="card">
+      <h1>首页背景图</h1>
+      <p class="desc">可上传一张图片作为首页背景（优先级高于渐变色）。</p>
+      <div class="grid">
+        <div>
+          <div class="row">
+            <label>上传背景图</label>
+            <input id="bgFile" type="file" accept="image/*" />
+          </div>
+          <div class="actions">
+            <button class="btn btn-primary" onclick="uploadBg()" type="button">上传并启用</button>
+            <button class="btn btn-danger" onclick="resetBg()" type="button">移除自定义背景</button>
+          </div>
+        </div>
+        <div>
+          <div class="preview">
+            {% if settings.homepage_bg_image %}
+              <img id="bgPreview" src="/static/site/{{ settings.homepage_bg_image }}" alt="预览" />
+            {% else %}
+              <div id="bgPreview">暂无背景图</div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function uploadBg() {
+      const file = document.getElementById('bgFile').files[0];
+      if (!file) { alert('请先选择图片'); return; }
+      const form = new FormData();
+      form.append('bg', file);
+      fetch('/admin/settings/upload_bg', { method: 'POST', body: form })
+        .then(r => r.json())
+        .then(data => {
+          if (data.status === 'success') {
+            const img = document.getElementById('bgPreview');
+            if (img.tagName.toLowerCase() === 'img') {
+              img.src = `/static/site/${data.filename}`;
+            } else {
+              const wrapper = document.getElementById('bgPreview');
+              const image = document.createElement('img');
+              image.id = 'bgPreview';
+              image.src = `/static/site/${data.filename}`;
+              wrapper.replaceWith(image);
+            }
+            alert('已更新背景图');
+          } else {
+            alert(data.message || '上传失败');
+          }
+        })
+        .catch(() => alert('上传失败'));
+    }
+
+    function resetBg() {
+      if (!confirm('确定要移除自定义背景图吗？')) return;
+      fetch('/admin/settings/reset_bg', { method: 'POST' })
+        .then(r => r.json())
+        .then(data => {
+          if (data.status === 'success') {
+            const preview = document.getElementById('bgPreview');
+            if (preview.tagName.toLowerCase() === 'img') {
+              const holder = document.createElement('div');
+              holder.id = 'bgPreview';
+              holder.innerText = '暂无背景图';
+              preview.replaceWith(holder);
+            }
+            alert('已移除背景图');
+          } else {
+            alert(data.message || '操作失败');
+          }
+        })
+        .catch(() => alert('操作失败'));
+    }
+  </script>
+</body>
+</html>
