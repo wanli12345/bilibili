@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>用户地域分布（中国） - 管理后台</title>
+  <style>
+    * { margin:0; padding:0; box-sizing: border-box; }
+    /* 黑客风格背景 */
+    body {
+      font-family: Consolas, Menlo, Monaco, 'Courier New', monospace;
+      color:#c8ffb0;
+      background: radial-gradient(ellipse at top, #061a0a 0%, #030d08 60%, #020805 100%);
+      min-height: 100vh;
+      position: relative;
+      overflow-x: hidden;
+    }
+    /* 背景流动代码雨 */
+    body::before {
+      content: '';
+      position: fixed; inset:0; pointer-events:none; opacity:.08;
+      background-image: repeating-linear-gradient( to bottom, #0f0 0 2px, transparent 2px 4px );
+      mix-blend-mode: screen;
+      animation: scan 6s linear infinite;
+    }
+    @keyframes scan { 0% { transform: translateY(-20px); } 100% { transform: translateY(20px);} }
+
+    .container { max-width: 1200px; margin: 30px auto; padding: 0 16px; }
+    .topbar { display:flex; justify-content: space-between; align-items:center; margin-bottom: 16px; }
+    a.link { color:#7dffa6; text-decoration:none; font-weight:700; }
+    .card { background: rgba(0,30,0,.6); border:1px solid #0a3; border-radius: 10px; padding: 16px; box-shadow: 0 0 20px rgba(0,255,140,.05) inset; margin-bottom: 16px; }
+    h2 { color:#8dffb5; }
+    #map { width: 100%; height: 560px; }
+    .list { max-height: 380px; overflow: auto; }
+    table { width: 100%; border-collapse: collapse; color:#c8ffb0; }
+    th, td { padding: 10px; border-bottom: 1px dashed #0a3; text-align: left; font-size: 14px; }
+    th { background: rgba(0,60,0,.3); }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+  <!-- 优先使用远程GeoJSON注册中国地图，确保地图轮廓可用；若失败，可回退到内置china.js（如需可解开下行） -->
+  <!-- <script src="https://cdn.jsdelivr.net/npm/echarts@5/map/js/china.js"></script> -->
+</head>
+<body>
+  <div class="container">
+    <div class="topbar">
+      <a class="link" href="/admin">← 返回管理后台</a>
+      <a class="link" href="/">返回首页</a>
+    </div>
+
+    <div class="card">
+      <h2 style="margin-bottom:10px;">中国用户分布</h2>
+      <div id="map"></div>
+    </div>
+
+    <div class="card">
+      <h2 id="regionTitle" style="margin-bottom:10px;">省份详情</h2>
+      <div class="list">
+        <table>
+          <thead>
+            <tr>
+              <th>用户ID</th>
+              <th>用户名</th>
+              <th>邮箱</th>
+              <th>注册时间</th>
+              <th>万里币</th>
+              <th>获赞</th>
+              <th>粉丝数</th>
+              <th>区域</th>
+              <th>来源IP</th>
+            </tr>
+          </thead>
+          <tbody id="userRows"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const chart = echarts.init(document.getElementById('map'));
+
+    function normalizeName(n){
+      // 兼容“省/市/自治区/特别行政区”结尾
+      return (n||'').replace(/(省|市|自治区|壮族自治区|回族自治区|维吾尔自治区|特别行政区)$/,'');
+    }
+
+    async function ensureChinaMapRegistered() {
+      // 已注册则跳过
+      const maps = echarts.getMap('china');
+      if (maps && maps.geoJson) return true;
+      try {
+        // 先尝试本地文件
+        const resp = await fetch('/static/geo/china.json', { cache: 'force-cache' });
+        const geo = await resp.json();
+        echarts.registerMap('china', geo);
+        return true;
+      } catch (e) {
+        try {
+          // 回退到远程
+          const resp2 = await fetch('https://geo.datav.aliyun.com/areas_v3/bound/geojson?code=100000_full', { cache: 'force-cache' });
+          const geo2 = await resp2.json();
+          echarts.registerMap('china', geo2);
+          return true;
+        } catch (e2) {
+          // 最后回退（若你想使用内置china.js，请在上方解开script标签）
+          return !!echarts.getMap('china');
+        }
+      }
+    }
+
+    async function loadChina() {
+      const ok = await ensureChinaMapRegistered();
+      if (!ok) {
+        alert('中国地图资源加载失败，请检查网络或启用备用china.js脚本');
+        return;
+      }
+      const res = await fetch('/admin/analytics/user_regions_cn').then(r => r.json()).catch(() => ({ status:'error' }));
+      if (res.status !== 'success') { alert(res.message || '载入失败'); return; }
+      const data = res.data.map(d => ({ name: normalizeName(d.region_name), value: d.count, raw: d.region_name }));
+      const option = {
+        backgroundColor: 'transparent',
+        tooltip: { trigger: 'item', formatter: p => `${p.data?.raw || p.name}: ${p.value || 0}人` },
+        visualMap: {
+          min: 0,
+          max: Math.max(10, ...data.map(d => d.value)),
+          inRange: { color: ['#072', '#0a5', '#0f8'] },
+          text: ['高','低'],
+          textStyle: { color:'#9dffbe' },
+          calculable: true
+        },
+        series: [{
+          type: 'map', map: 'china', roam: true,
+          label: { show: false, color:'#b9ffcf' },
+          itemStyle: { areaColor: '#033', borderColor: '#0a3' },
+          emphasis: { label: { show: true }, itemStyle: { areaColor: '#084' } },
+          data
+        }]
+      };
+      chart.setOption(option);
+
+      // 首次加载时，优先展示“未知”或第一个有数据的省份的用户列表
+      const unknown = res.data.find(d => d.region_name === '未知');
+      if (unknown) {
+        loadUsers('未知');
+      } else if (res.data.length > 0) {
+        loadUsers(res.data[0].region_name);
+      } else {
+        // 没有任何数据时，清空表格并提示
+        const tbody = document.getElementById('userRows');
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:#9dffbe;">暂无数据</td></tr>`;
+      }
+    }
+
+    chart.on('click', function (params) {
+      const region = params.data?.raw || params.name;
+      if (!region) return;
+      loadUsers(region);
+    });
+
+    function loadUsers(region){
+      document.getElementById('regionTitle').innerText = `省份详情：${region}`;
+      fetch(`/admin/analytics/user_regions_cn/${encodeURIComponent(region)}`)
+        .then(r => r.json())
+        .then(res => {
+          if (res.status !== 'success') { alert(res.message || '载入失败'); return; }
+          const tbody = document.getElementById('userRows');
+          tbody.innerHTML = '';
+          if (!res.users || res.users.length === 0) {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td colspan="8" style="text-align:center;color:#9dffbe;">暂无用户</td>`;
+            tbody.appendChild(tr);
+            return;
+          }
+          res.users.forEach(u => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td>${u.id}</td>
+              <td>${u.username}</td>
+              <td>${u.email}</td>
+              <td>${u.created_at || ''}</td>
+              <td>${u.wanli_coins}</td>
+              <td>${u.received_likes}</td>
+              <td>${u.followers}</td>
+              <td>${u.region_name || ''}</td>
+              <td>${u.register_ip || ''}</td>
+            `;
+            tbody.appendChild(tr);
+          });
+        });
+    }
+
+    loadChina();
+    window.addEventListener('resize', () => chart.resize());
+  </script>
+</body>
+</html>

@@ -69,6 +69,10 @@ class User(UserMixin, db.Model):
     received_likes = db.Column(db.Integer, default=0)  # 收到的赞数量
     last_login_date = db.Column(db.Date)  # 最后登录日期
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    # 地域信息（可选）
+    country_code = db.Column(db.String(2))  # ISO 3166-1 alpha-2，如 'CN', 'US'
+    region_name = db.Column(db.String(100))  # 省/州/区域名称
+    register_ip = db.Column(db.String(64))  # 注册时来源IP
     videos = db.relationship('Video', foreign_keys='Video.user_id', backref='author', lazy=True)
     comments = db.relationship('Comment', backref='author', lazy=True)
     
@@ -204,9 +208,17 @@ def login():
             if user.is_admin and not user.password_changed:
                 # 管理员首次登录，重定向到修改密码页面
                 login_user(user)
+                try:
+                    _update_user_geo_from_request(user)
+                except Exception:
+                    pass
                 return redirect(url_for('change_admin_password'))
             else:
                 login_user(user)
+                try:
+                    _update_user_geo_from_request(user)
+                except Exception:
+                    pass
                 if is_ajax:
                     return jsonify({'success': True, 'redirect_url': url_for('index')}), 200
                 return redirect(url_for('index'))
@@ -237,11 +249,20 @@ def register():
             flash('邮箱已存在')
             return render_template('register.html')
         
+        # 记录来源IP并定位
+        try:
+            ip = _get_client_ip(request)
+        except Exception:
+            ip = None
+        cc, rn = _geolocate_ip(ip) if ip else (None, None)
         user = User(
             username=username,
             email=email,
             password_hash=generate_password_hash(password),
-            wanli_coins=10  # 新用户默认10个万里币
+            wanli_coins=10,  # 新用户默认10个万里币
+            register_ip=ip,
+            country_code=cc or None,
+            region_name=(rn or None)
         )
         db.session.add(user)
         db.session.commit()
@@ -545,6 +566,193 @@ def admin():
                          approved_videos=approved_videos,
                          rejected_videos=rejected_videos,
                          comments=comments)
+
+@app.route('/admin/geo')
+@login_required
+def admin_geo():
+    if not current_user.is_admin:
+        flash('您没有管理员权限')
+        return redirect(url_for('index'))
+    if not current_user.password_changed:
+        return redirect(url_for('change_admin_password'))
+    return render_template('admin_geo.html')
+
+# （已删除）世界地图页面
+
+# ----------- 工具：基于客户端IP更新用户国家/区域 -----------
+def _get_client_ip(req):
+    xff = req.headers.get('X-Forwarded-For')
+    if xff:
+        return xff.split(',')[0].strip()
+    return req.remote_addr
+
+def _geolocate_ip(ip: str):
+    try:
+        # 简单外部服务（开发用途）：ipapi.co
+        import json as _json
+        from urllib.request import urlopen as _urlopen
+        if not ip or ip.startswith('127.') or ip == '::1':
+            return None, None
+        resp = _urlopen(f'https://ipapi.co/{ip}/json/', timeout=2)
+        data = _json.loads(resp.read().decode('utf-8'))
+        country_code = (data.get('country_code') or '').upper() or None
+        # 中国场景优先拿省份
+        region = data.get('region') or data.get('province') or data.get('city') or None
+        # 将英文省份名映射为中文，便于与 ECharts 中国地图名称匹配
+        if country_code == 'CN' and region:
+            region_lower = region.lower()
+            # 关键字包含判断（覆盖自治州/自治区/特别行政区等变体）
+            mapping = [
+                ('beijing', '北京'), ('tianjin', '天津'), ('hebei', '河北'), ('shanxi', '山西'),
+                ('inner mongolia', '内蒙古'), ('neimenggu', '内蒙古'),
+                ('liaoning', '辽宁'), ('jilin', '吉林'), ('heilongjiang', '黑龙江'),
+                ('shanghai', '上海'), ('jiangsu', '江苏'), ('zhejiang', '浙江'), ('anhui', '安徽'),
+                ('fujian', '福建'), ('jiangxi', '江西'), ('shandong', '山东'), ('henan', '河南'),
+                ('hubei', '湖北'), ('hunan', '湖南'), ('guangdong', '广东'),
+                ('guangxi', '广西'), ('guangxi zhuang', '广西'),
+                ('hainan', '海南'), ('chongqing', '重庆'), ('sichuan', '四川'), ('guizhou', '贵州'),
+                ('yunnan', '云南'), ('tibet', '西藏'), ('xizang', '西藏'), ('shaanxi', '陕西'),
+                ('gansu', '甘肃'), ('qinghai', '青海'), ('ningxia', '宁夏'), ('xinjiang', '新疆'),
+                ('hong kong', '香港'), ('macau', '澳门'), ('macao', '澳门'), ('taiwan', '台湾')
+            ]
+            mapped = None
+            for key, zh in mapping:
+                if key in region_lower:
+                    mapped = zh
+                    break
+            if mapped:
+                region = mapped
+        return country_code, region
+    except Exception:
+        return None, None
+
+def _update_user_geo_from_request(user: 'User'):
+    try:
+        ip = _get_client_ip(request)
+        cc, rn = _geolocate_ip(ip)
+        updated = False
+        if cc and user.country_code != cc:
+            user.country_code = cc
+            updated = True
+        if rn and user.region_name != rn:
+            user.region_name = rn
+            updated = True
+        if updated:
+            db.session.commit()
+    except Exception:
+        db.session.rollback()
+
+@app.route('/admin/analytics/user_regions')
+@login_required
+def analytics_user_regions():
+    if not current_user.is_admin:
+        return jsonify({'status': 'error', 'message': '权限不足'}), 403
+    # 统计每个国家的用户数量（忽略空）
+    results = (
+        db.session.query(User.country_code, db.func.count(User.id))
+        .filter(User.country_code.isnot(None))
+        .group_by(User.country_code)
+        .all()
+    )
+    data = [
+        {
+            'country_code': (code or '').upper(),
+            'count': int(count or 0),
+        }
+        for code, count in results
+        if code
+    ]
+    return jsonify({'status': 'success', 'data': data})
+
+@app.route('/admin/analytics/user_regions/<country_code>')
+@login_required
+def analytics_user_region_users(country_code: str):
+    if not current_user.is_admin:
+        return jsonify({'status': 'error', 'message': '权限不足'}), 403
+    code = (country_code or '').upper()
+    users = User.query.filter(User.country_code == code).order_by(User.created_at.desc()).all()
+    users_json = []
+    for u in users:
+        try:
+            followers_count = u.followers.count()
+        except Exception:
+            followers_count = 0
+        users_json.append({
+            'id': u.id,
+            'username': u.username,
+            'email': u.email,
+            'created_at': u.created_at.strftime('%Y-%m-%d %H:%M') if u.created_at else None,
+            'wanli_coins': u.wanli_coins,
+            'received_likes': u.received_likes,
+            'followers': followers_count,
+            'region_name': u.region_name,
+        })
+    return jsonify({'status': 'success', 'users': users_json, 'country_code': code})
+
+# 中国省级分布与详情（用于中国地图）
+@app.route('/admin/analytics/user_regions_cn')
+@login_required
+def analytics_user_regions_cn():
+    if not current_user.is_admin:
+        return jsonify({'status': 'error', 'message': '权限不足'}), 403
+    # 已知省份统计
+    results = (
+        db.session.query(User.region_name, db.func.count(User.id))
+        .filter(User.region_name.isnot(None))
+        .filter(User.region_name != '')
+        .filter(db.or_(User.country_code == 'CN', User.country_code.is_(None)))
+        .group_by(User.region_name)
+        .all()
+    )
+    data = [
+        {
+            'region_name': (name or '').strip(),
+            'count': int(count or 0),
+        }
+        for name, count in results
+        if name
+    ]
+    # 未填写省份的人数（视为“未知”）
+    unknown_count = (
+        db.session.query(db.func.count(User.id))
+        .filter(db.or_(User.country_code == 'CN', User.country_code.is_(None)))
+        .filter(db.or_(User.region_name.is_(None), User.region_name == ''))
+        .scalar()
+    )
+    if unknown_count and int(unknown_count) > 0:
+        data.append({'region_name': '未知', 'count': int(unknown_count)})
+    return jsonify({'status': 'success', 'data': data})
+
+@app.route('/admin/analytics/user_regions_cn/<path:region_name>')
+@login_required
+def analytics_user_regions_cn_users(region_name: str):
+    if not current_user.is_admin:
+        return jsonify({'status': 'error', 'message': '权限不足'}), 403
+    name = (region_name or '').strip()
+    query = User.query.filter(db.or_(User.country_code == 'CN', User.country_code.is_(None)))
+    if name == '未知':
+        query = query.filter(db.or_(User.region_name.is_(None), User.region_name == ''))
+    else:
+        query = query.filter(User.region_name == name)
+    users = query.order_by(User.created_at.desc()).all()
+    users_json = []
+    for u in users:
+        try:
+            followers_count = u.followers.count()
+        except Exception:
+            followers_count = 0
+        users_json.append({
+            'id': u.id,
+            'username': u.username,
+            'email': u.email,
+            'created_at': u.created_at.strftime('%Y-%m-%d %H:%M') if u.created_at else None,
+            'wanli_coins': u.wanli_coins,
+            'received_likes': u.received_likes,
+            'followers': followers_count,
+            'region_name': u.region_name,
+            'register_ip': u.register_ip,
+        })
+    return jsonify({'status': 'success', 'users': users_json, 'region_name': name})
 
 @app.route('/admin/settings', methods=['GET', 'POST'])
 @login_required
@@ -968,6 +1176,20 @@ def too_large(e):
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
+        # 轻量迁移：为现有 SQLite 用户表补充新字段，避免 no such column 错误
+        try:
+            from sqlalchemy import text
+            with db.engine.begin() as conn:
+                cols = {row[1] for row in conn.exec_driver_sql("PRAGMA table_info('user')")}
+                if 'country_code' not in cols:
+                    conn.execute(text("ALTER TABLE user ADD COLUMN country_code VARCHAR(2)"))
+                if 'region_name' not in cols:
+                    conn.execute(text("ALTER TABLE user ADD COLUMN region_name VARCHAR(100)"))
+                if 'register_ip' not in cols:
+                    conn.execute(text("ALTER TABLE user ADD COLUMN register_ip VARCHAR(64)"))
+        except Exception as _e:
+            # 避免因少数环境不兼容而阻断启动（开发环境可忽略）
+            pass
         # 创建默认管理员账户
         if not User.query.filter_by(username='admin').first():
             admin = User(
