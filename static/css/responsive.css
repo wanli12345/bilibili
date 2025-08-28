@@ -1,0 +1,339 @@
+/* 响应式设计 - 移动端适配 */
+
+/* 基础响应式设置 */
+* {
+    box-sizing: border-box;
+}
+
+/* 移动端断点 */
+@media (max-width: 768px) {
+    /* 容器适配 */
+    .container {
+        padding: 0 15px;
+        max-width: 100%;
+    }
+    
+    /* 导航栏移动端适配 */
+    nav {
+        padding: 0.5rem 0;
+    }
+    
+    /* 保持导航容器为横向排列（移动端纵向菜单由 mobile-nav.css 控制） */
+    /* nav .container { flex-direction: column; gap: 1rem; } */
+    
+    .logo {
+        font-size: 1.5rem;
+    }
+    
+    .logo::before {
+        font-size: 1.5rem;
+    }
+    
+    /* 隐藏与纵向排列由 mobile-nav.css 负责，这里不强制纵排 */
+    /* .nav-links { flex-direction: column; gap: 0.5rem; width: 100%; } */
+    
+    .nav-links a {
+        width: 100%;
+        justify-content: center;
+        padding: 12px 16px;
+        font-size: 14px;
+    }
+    
+    /* 主要内容区域 */
+    .main-content {
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .welcome-section {
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .welcome-section h1 {
+        font-size: 2rem;
+    }
+    
+    .welcome-section p {
+        font-size: 1rem;
+    }
+    
+    /* 视频网格移动端适配 */
+    .video-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .video-card {
+        margin-bottom: 1rem;
+    }
+    
+    .video-thumbnail {
+        height: 180px;
+    }
+    
+    .video-info {
+        padding: 1rem;
+    }
+    
+    .video-title {
+        font-size: 1rem;
+    }
+    
+    .video-meta {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    /* 表单移动端适配 */
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+        font-size: 16px; /* 防止iOS缩放 */
+        padding: 12px 16px;
+    }
+    
+    /* 按钮移动端适配 */
+    .submit-btn,
+    .btn {
+        padding: 12px 20px;
+        font-size: 16px;
+        width: 100%;
+    }
+    
+    /* 用户头像移动端适配 */
+    .user-avatar {
+        width: 35px;
+        height: 35px;
+    }
+    
+    /* 弹幕输入框移动端适配 */
+    .danmaku-input {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .danmaku-input input,
+    .danmaku-input select {
+        width: 100%;
+    }
+    
+    /* 评论区域移动端适配 */
+    .comments-section {
+        padding: 1rem;
+    }
+    
+    .comment-item {
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    /* 管理后台移动端适配 */
+    .admin-section {
+        padding: 1rem;
+    }
+    
+    .admin-table {
+        font-size: 12px;
+    }
+    
+    .admin-table th,
+    .admin-table td {
+        padding: 8px 4px;
+    }
+    
+    /* 个人资料页面移动端适配 */
+    .profile-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+    }
+    
+    .profile-avatar {
+        width: 100px;
+        height: 100px;
+    }
+    
+    .profile-stats {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .profile-stats > div {
+        text-align: center;
+    }
+}
+
+/* 小屏幕手机适配 */
+@media (max-width: 480px) {
+    .container {
+        padding: 0 10px;
+    }
+    
+    .main-content {
+        padding: 0.8rem;
+    }
+    
+    .welcome-section {
+        padding: 1rem;
+    }
+    
+    .welcome-section h1 {
+        font-size: 1.8rem;
+    }
+    
+    .welcome-section p {
+        font-size: 0.9rem;
+    }
+    
+    .video-grid {
+        gap: 0.8rem;
+    }
+    
+    .video-thumbnail {
+        height: 160px;
+    }
+    
+    .video-info {
+        padding: 0.8rem;
+    }
+    
+    .video-title {
+        font-size: 0.9rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1rem;
+    }
+    
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+        padding: 10px 14px;
+        font-size: 14px;
+    }
+    
+    .submit-btn,
+    .btn {
+        padding: 10px 16px;
+        font-size: 14px;
+    }
+    
+    /* 导航栏小屏幕适配 */
+    .nav-links a {
+        padding: 10px 12px;
+        font-size: 13px;
+    }
+    
+    /* 弹幕和评论小屏幕适配 */
+    .danmaku-input input,
+    .danmaku-input select {
+        font-size: 14px;
+        padding: 8px 12px;
+    }
+    
+    .comment-item {
+        padding: 0.8rem;
+    }
+    
+    .comment-content {
+        font-size: 14px;
+    }
+}
+
+/* 横屏手机适配 */
+@media (max-width: 768px) and (orientation: landscape) {
+    nav .container {
+        flex-direction: row;
+        gap: 1rem;
+    }
+    
+    .nav-links {
+        flex-direction: row;
+        gap: 1rem;
+    }
+    
+    .video-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+}
+
+/* 平板适配 */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .container {
+        max-width: 900px;
+        padding: 0 30px;
+    }
+    
+    .video-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+    }
+    
+    .welcome-section h1 {
+        font-size: 2.2rem;
+    }
+    
+    .nav-links {
+        gap: 1.5rem;
+    }
+}
+
+/* 触摸设备优化 */
+@media (hover: none) and (pointer: coarse) {
+    /* 触摸设备上的交互优化 */
+    .video-card:hover {
+        transform: none;
+    }
+    
+    .nav-links a:hover {
+        transform: none;
+    }
+    
+    .user-avatar:hover {
+        transform: none;
+    }
+    
+    /* 增加触摸目标大小 */
+    .nav-links a {
+        min-height: 44px;
+        min-width: 44px;
+    }
+    
+    .submit-btn,
+    .btn {
+        min-height: 44px;
+    }
+    
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+        min-height: 44px;
+    }
+}
+
+/* 高分辨率屏幕优化 */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .video-thumbnail {
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
+    }
+}
+
+/* 深色模式支持 */
+@media (prefers-color-scheme: dark) {
+    /* 可以根据需要添加深色模式样式 */
+}
+
+/* 减少动画（用户偏好） */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}

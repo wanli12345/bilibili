@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
@@ -411,7 +410,7 @@ def add_danmaku():
                 time=time_float,
                 type=danmaku_type,
                 color=color
-            )
+            )   
             db.session.add(danmaku)
             db.session.commit()
             

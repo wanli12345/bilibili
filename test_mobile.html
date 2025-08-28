@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>移动端适配测试 - 万里的秘密基地</title>
+    <link rel="stylesheet" href="/static/css/responsive.css">
+    <link rel="stylesheet" href="/static/css/mobile-nav.css">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .test-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        .test-title {
+            color: #333;
+            text-align: center;
+            margin-bottom: 2rem;
+            font-size: 2rem;
+        }
+        
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .test-card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .test-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+        
+        .test-card h3 {
+            color: #333;
+            margin-bottom: 1rem;
+        }
+        
+        .test-card p {
+            color: #666;
+            margin-bottom: 1rem;
+        }
+        
+        .test-button {
+            background: linear-gradient(135deg, #00a1d6, #0088b3);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .test-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 161, 214, 0.3);
+        }
+        
+        .responsive-demo {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 1rem;
+            margin: 1rem 0;
+            text-align: center;
+        }
+        
+        .screen-size {
+            font-weight: bold;
+            color: #00a1d6;
+            margin-bottom: 0.5rem;
+        }
+        
+        .device-info {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .nav-demo {
+            background: rgba(0, 161, 214, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 0;
+            margin-bottom: 2rem;
+            border-radius: 15px;
+        }
+        
+        .nav-demo .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: white;
+            text-decoration: none;
+        }
+        
+        .nav-links {
+            display: flex;
+            list-style: none;
+            align-items: center;
+            gap: 2rem;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            padding: 10px 14px;
+            border-radius: 22px;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-links a:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .mobile-menu-toggle {
+            display: none;
+            flex-direction: column;
+            justify-content: space-around;
+            width: 30px;
+            height: 30px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+        }
+        
+        .mobile-menu-toggle span {
+            width: 100%;
+            height: 3px;
+            background: white;
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+        
+        .mobile-nav {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: rgba(0, 161, 214, 0.98);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            padding-top: 80px;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+        }
+        
+        .mobile-nav.active {
+            transform: translateX(0);
+        }
+        
+        .mobile-nav-links {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .mobile-nav-links a {
+            display: block;
+            color: white;
+            text-decoration: none;
+            padding: 15px 20px;
+            font-size: 18px;
+            font-weight: 600;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            margin: 0 20px;
+        }
+        
+        .mobile-nav-links a:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .mobile-nav-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 50%;
+        }
+        
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+            
+            .mobile-menu-toggle {
+                display: flex;
+            }
+            
+            .mobile-nav {
+                display: block;
+            }
+            
+            .test-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .test-title {
+                font-size: 1.5rem;
+            }
+            
+            .container {
+                padding: 15px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .test-section {
+                padding: 1rem;
+            }
+            
+            .test-title {
+                font-size: 1.3rem;
+            }
+            
+            .test-button {
+                width: 100%;
+                padding: 15px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航演示 -->
+    <div class="nav-demo">
+        <div class="container">
+            <a href="#" class="logo">万里的秘密基地</a>
+            
+            <!-- 桌面端导航 -->
+            <ul class="nav-links">
+                <li><a href="#">🏠 首页</a></li>
+                <li><a href="#">📹 上传</a></li>
+                <li><a href="#">🔍 搜索</a></li>
+                <li><a href="#">👤 个人中心</a></li>
+            </ul>
+            
+            <!-- 移动端汉堡菜单 -->
+            <button class="mobile-menu-toggle" aria-label="菜单">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </div>
+    
+    <!-- 移动端导航菜单 -->
+    <div class="mobile-nav">
+        <button class="mobile-nav-close" aria-label="关闭菜单">×</button>
+        <ul class="mobile-nav-links">
+            <li><a href="#">🏠 首页</a></li>
+            <li><a href="#">📹 上传</a></li>
+            <li><a href="#">🔍 搜索</a></li>
+            <li><a href="#">👤 个人中心</a></li>
+        </ul>
+    </div>
+    
+    <div class="container">
+        <div class="test-section">
+            <h1 class="test-title">📱 移动端适配测试页面</h1>
+            
+            <div class="responsive-demo">
+                <div class="screen-size" id="screenSize">屏幕尺寸: 加载中...</div>
+                <div class="device-info" id="deviceInfo">设备信息: 加载中...</div>
+            </div>
+            
+            <p style="text-align: center; color: #666;">
+                调整浏览器窗口大小或使用开发者工具的设备模拟器来测试响应式效果
+            </p>
+        </div>
+        
+        <div class="test-section">
+            <h2>🎯 响应式布局测试</h2>
+            <div class="test-grid">
+                <div class="test-card">
+                    <h3>📱 移动端适配</h3>
+                    <p>在小屏幕设备上，布局会自动调整为单列显示，确保最佳的用户体验。</p>
+                    <button class="test-button" onclick="testResponsive()">测试响应式</button>
+                </div>
+                
+                <div class="test-card">
+                    <h3>🖥️ 桌面端优化</h3>
+                    <p>在大屏幕上，内容会以网格形式展示，充分利用屏幕空间。</p>
+                    <button class="test-button" onclick="testDesktop()">测试桌面端</button>
+                </div>
+                
+                <div class="test-card">
+                    <h3>📐 断点系统</h3>
+                    <p>使用标准的断点系统：768px(手机)、1024px(平板)、>1024px(桌面)。</p>
+                    <button class="test-button" onclick="testBreakpoints()">测试断点</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>🎮 交互功能测试</h2>
+            <div class="test-grid">
+                <div class="test-card">
+                    <h3>🍔 汉堡菜单</h3>
+                    <p>在移动端点击汉堡菜单按钮，测试侧滑导航菜单的交互效果。</p>
+                    <button class="test-button" onclick="testMobileNav()">测试导航</button>
+                </div>
+                
+                <div class="test-card">
+                    <h3>👆 触摸优化</h3>
+                    <p>触摸设备上的按钮和链接都有合适的尺寸，避免误触。</p>
+                    <button class="test-button" onclick="testTouch()">测试触摸</button>
+                </div>
+                
+                <div class="test-card">
+                    <h3>🎨 动画效果</h3>
+                    <p>响应式动画会根据设备性能自动调整，确保流畅的用户体验。</p>
+                    <button class="test-button" onclick="testAnimation()">测试动画</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>📊 性能测试</h2>
+            <div class="test-grid">
+                <div class="test-card">
+                    <h3>⚡ 加载速度</h3>
+                    <p>CSS和JavaScript文件按需加载，优化移动端网络性能。</p>
+                    <button class="test-button" onclick="testPerformance()">测试性能</button>
+                </div>
+                
+                <div class="test-card">
+                    <h3>🖼️ 图片优化</h3>
+                    <p>支持高分辨率屏幕，图片渲染优化，确保清晰度。</p>
+                    <button class="test-button" onclick="testImages()">测试图片</button>
+                </div>
+                
+                <div class="test-card">
+                    <h3>🔧 兼容性</h3>
+                    <p>支持现代浏览器和移动端浏览器，确保跨平台兼容性。</p>
+                    <button class="test-button" onclick="testCompatibility()">测试兼容性</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 检测屏幕尺寸和设备信息
+        function updateDeviceInfo() {
+            const screenSize = document.getElementById('screenSize');
+            const deviceInfo = document.getElementById('deviceInfo');
+            
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            
+            let deviceType = '桌面端';
+            if (width <= 480) {
+                deviceType = '小屏手机';
+            } else if (width <= 768) {
+                deviceType = '手机';
+            } else if (width <= 1024) {
+                deviceType = '平板';
+            }
+            
+            screenSize.textContent = `屏幕尺寸: ${width} × ${height}px`;
+            deviceInfo.textContent = `设备类型: ${deviceType}`;
+        }
+        
+        // 移动端导航功能
+        document.addEventListener('DOMContentLoaded', function() {
+            const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
+            const mobileNav = document.querySelector('.mobile-nav');
+            const mobileNavClose = document.querySelector('.mobile-nav-close');
+            
+            if (mobileMenuToggle && mobileNav) {
+                mobileMenuToggle.addEventListener('click', function() {
+                    mobileNav.classList.toggle('active');
+                });
+                
+                if (mobileNavClose) {
+                    mobileNavClose.addEventListener('click', function() {
+                        mobileNav.classList.remove('active');
+                    });
+                }
+                
+                mobileNav.addEventListener('click', function(e) {
+                    if (e.target === mobileNav) {
+                        mobileNav.classList.remove('active');
+                    }
+                });
+            }
+            
+            // 初始化设备信息
+            updateDeviceInfo();
+            
+            // 监听窗口大小变化
+            window.addEventListener('resize', updateDeviceInfo);
+        });
+        
+        // 测试函数
+        function testResponsive() {
+            alert('响应式测试：请调整浏览器窗口大小查看效果！');
+        }
+        
+        function testDesktop() {
+            alert('桌面端测试：在大屏幕上查看网格布局效果！');
+        }
+        
+        function testBreakpoints() {
+            alert('断点测试：在不同屏幕尺寸下查看布局变化！');
+        }
+        
+        function testMobileNav() {
+            if (window.innerWidth <= 768) {
+                alert('移动端导航测试：点击汉堡菜单按钮测试侧滑菜单！');
+            } else {
+                alert('请在移动端或调整窗口大小到768px以下测试！');
+            }
+        }
+        
+        function testTouch() {
+            if ('ontouchstart' in window) {
+                alert('触摸设备检测成功！触摸优化已启用。');
+            } else {
+                alert('非触摸设备，触摸优化未启用。');
+            }
+        }
+        
+        function testAnimation() {
+            alert('动画测试：观察页面元素的过渡动画效果！');
+        }
+        
+        function testPerformance() {
+            const start = performance.now();
+            setTimeout(() => {
+                const end = performance.now();
+                alert(`性能测试完成！延迟: ${(end - start).toFixed(2)}ms`);
+            }, 100);
+        }
+        
+        function testImages() {
+            alert('图片优化测试：在高分辨率屏幕上查看图片清晰度！');
+        }
+        
+        function testCompatibility() {
+            const userAgent = navigator.userAgent;
+            alert(`浏览器信息：${userAgent}`);
+        }
+    </script>
+</body>
+</html>

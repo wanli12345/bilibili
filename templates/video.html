@@ -2,8 +2,11 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>{{ video.title }} - {{ settings.site_name if settings else '万里的秘密基地' }}</title>
+    <link rel="stylesheet" href="/static/css/responsive.css">
+    <link rel="stylesheet" href="/static/css/mobile-nav.css">
+    <link rel="stylesheet" href="/static/css/video-mobile.css">
     <style>
         * {
             margin: 0;
@@ -629,6 +632,8 @@
     <nav>
         <div class="container">
             <a href="/" class="logo">万里的秘密基地</a>
+            
+            <!-- 桌面端导航 -->
             <ul class="nav-links">
                 <li>
                     <a href="/" class="{% if request.path == '/' %}active{% endif %}">首页</a>
@@ -654,6 +659,15 @@
                     <li><a href="/register">注册</a></li>
                 {% endif %}
             </ul>
+            
+            <!-- 移动端汉堡菜单 -->
+            <button class="mobile-menu-toggle" aria-label="菜单">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            
+            <!-- 用户头像 -->
             {% if current_user.is_authenticated %}
                 <img src="/static/avatars/{{ current_user.avatar }}" alt="头像" class="user-avatar" onclick="window.location.href='/profile'">
             {% else %}
@@ -661,6 +675,69 @@
             {% endif %}
         </div>
     </nav>
+    
+    <!-- 移动端顶部精简导航：首页 / 上传 / 搜索 / 更多 -->
+    <div class="mobile-topbar">
+        <ul class="mobile-topbar-links container">
+            <li>
+                <a href="/" class="{% if request.path == '/' %}active{% endif %}">
+                    <span class="icon">🏠</span>
+                    <span>首页</span>
+                </a>
+            </li>
+            <li>
+                {% if current_user.is_authenticated %}
+                    <a href="/upload" class="{% if request.path.startswith('/upload') %}active{% endif %}">
+                        <span class="icon">📹</span>
+                        <span>上传</span>
+                    </a>
+                {% else %}
+                    <a href="/login">
+                        <span class="icon">📹</span>
+                        <span>上传</span>
+                    </a>
+                {% endif %}
+            </li>
+            <li>
+                <a href="/search" class="{% if request.path.startswith('/search') %}active{% endif %}">
+                    <span class="icon">🔍</span>
+                    <span>搜索</span>
+                </a>
+            </li>
+            <li>
+                <button type="button" class="mobile-topbar-more" onclick="openMoreMenu()">
+                    <span class="icon">⋯</span>
+                    <span>更多</span>
+                </button>
+            </li>
+        </ul>
+    </div>
+
+    <!-- 移动端导航菜单 -->
+    <div class="mobile-nav">
+        <button class="mobile-nav-close" aria-label="关闭菜单">×</button>
+        <ul class="mobile-nav-links">
+            <li><a href="/" class="{% if request.path == '/' %}active{% endif %}">🏠 首页</a></li>
+            <li>
+                {% if current_user.is_authenticated %}
+                    <a href="/upload">📹 上传</a>
+                {% else %}
+                    <a href="/login">📹 上传</a>
+                {% endif %}
+            </li>
+            <li><a href="/search" class="{% if request.path.startswith('/search') %}active{% endif %}">🔍 搜索</a></li>
+            {% if current_user.is_authenticated %}
+                <li><a href="/profile" class="{% if request.path.startswith('/profile') %}active{% endif %}">👤 个人中心</a></li>
+                {% if current_user.is_admin %}
+                    <li><a href="/admin" class="{% if request.path.startswith('/admin') %}active{% endif %}">⚙️ 管理后台</a></li>
+                {% endif %}
+                <li><a href="/logout">🚪 退出</a></li>
+            {% else %}
+                <li><a href="/login">🔑 登录</a></li>
+                <li><a href="/register">📝 注册</a></li>
+            {% endif %}
+        </ul>
+    </div>
     
     <div class="container">
         <div class="main-content">
@@ -957,5 +1034,8 @@
             }
         });
     </script>
+    
+    <!-- 移动端导航脚本 -->
+    <script src="/static/js/mobile-nav.js"></script>
 </body>
 </html> 

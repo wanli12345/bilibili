@@ -1,0 +1,358 @@
+/* 视频播放页面移动端优化 */
+
+/* 移动端断点 */
+@media (max-width: 768px) {
+    /* 视频容器移动端适配 */
+    .video-container {
+        margin: 0 -15px;
+        border-radius: 0;
+    }
+    
+    .video-player {
+        height: 200px;
+        border-radius: 0;
+    }
+    
+    .video-player::before {
+        font-size: 2.5rem;
+    }
+    
+    /* 视频信息移动端适配 */
+    .video-info {
+        padding: 1rem 0;
+    }
+    
+    .video-title {
+        font-size: 1.4rem;
+        margin-bottom: 0.8rem;
+    }
+    
+    .video-meta {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+        padding-bottom: 1rem;
+    }
+    
+    .video-author {
+        width: 100%;
+        justify-content: flex-start;
+    }
+    
+    .author-avatar {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .author-info h4 {
+        font-size: 1rem;
+    }
+    
+    .author-info p {
+        font-size: 0.8rem;
+    }
+    
+    .video-stats {
+        width: 100%;
+        justify-content: space-between;
+        gap: 0.5rem;
+    }
+    
+    .stat-item {
+        font-size: 0.8rem;
+        flex-direction: column;
+        text-align: center;
+        gap: 0.3rem;
+    }
+    
+    /* 侧边栏移动端适配 */
+    .sidebar {
+        margin-top: 1rem;
+        padding: 1rem;
+        border-radius: 15px;
+    }
+    
+    .action-buttons {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.8rem;
+    }
+    
+    .action-btn {
+        padding: 12px 8px;
+        font-size: 14px;
+        min-height: 60px;
+    }
+    
+    .action-btn span:first-child {
+        font-size: 1.2rem;
+    }
+    
+    /* 弹幕输入区域移动端适配 */
+    .danmaku-section {
+        margin-top: 1rem;
+        padding: 1rem;
+        border-radius: 15px;
+    }
+    
+    .danmaku-input {
+        flex-direction: column;
+        gap: 0.8rem;
+    }
+    
+    .danmaku-input input,
+    .danmaku-input select {
+        width: 100%;
+        padding: 12px 16px;
+        font-size: 16px;
+        min-height: 44px;
+    }
+    
+    .danmaku-input button {
+        width: 100%;
+        padding: 12px 16px;
+        font-size: 16px;
+        min-height: 44px;
+    }
+    
+    /* 评论区域移动端适配 */
+    .comments-section {
+        margin-top: 1rem;
+        padding: 1rem;
+        border-radius: 15px;
+    }
+    
+    .comment-form {
+        margin-bottom: 1.5rem;
+    }
+    
+    .comment-form textarea {
+        width: 100%;
+        min-height: 80px;
+        padding: 12px 16px;
+        font-size: 16px;
+    }
+    
+    .comment-form button {
+        width: 100%;
+        padding: 12px 16px;
+        font-size: 16px;
+        min-height: 44px;
+    }
+    
+    .comment-item {
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .comment-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+        margin-bottom: 0.8rem;
+    }
+    
+    .comment-author {
+        font-size: 0.9rem;
+    }
+    
+    .comment-time {
+        font-size: 0.8rem;
+    }
+    
+    .comment-content {
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+    
+    /* 弹幕显示移动端优化 */
+    .danmaku {
+        font-size: 14px;
+        padding: 4px 8px;
+    }
+    
+    /* 投币模态框移动端适配 */
+    .modal-content {
+        width: 90%;
+        max-width: 350px;
+        margin: 20px auto;
+        padding: 1.5rem;
+    }
+    
+    .modal h2 {
+        font-size: 1.3rem;
+    }
+    
+    .coin-options {
+        grid-template-columns: 1fr;
+        gap: 0.8rem;
+        margin: 1rem 0;
+    }
+    
+    .coin-option {
+        padding: 1rem;
+        font-size: 14px;
+    }
+    
+    .coin-option input[type="radio"] {
+        width: 20px;
+        height: 20px;
+    }
+    
+    .modal-buttons {
+        flex-direction: column;
+        gap: 0.8rem;
+    }
+    
+    .modal-buttons button {
+        width: 100%;
+        padding: 12px 16px;
+        font-size: 16px;
+        min-height: 44px;
+    }
+}
+
+/* 小屏幕手机适配 */
+@media (max-width: 480px) {
+    .video-player {
+        height: 180px;
+    }
+    
+    .video-title {
+        font-size: 1.2rem;
+    }
+    
+    .action-buttons {
+        grid-template-columns: 1fr;
+        gap: 0.6rem;
+    }
+    
+    .action-btn {
+        padding: 10px 6px;
+        font-size: 13px;
+        min-height: 50px;
+    }
+    
+    .danmaku-input input,
+    .danmaku-input select,
+    .danmaku-input button {
+        padding: 10px 14px;
+        font-size: 14px;
+        min-height: 40px;
+    }
+    
+    .comment-form textarea {
+        min-height: 70px;
+        padding: 10px 14px;
+        font-size: 14px;
+    }
+    
+    .comment-form button {
+        padding: 10px 14px;
+        font-size: 14px;
+        min-height: 40px;
+    }
+    
+    .modal-content {
+        width: 95%;
+        margin: 10px auto;
+        padding: 1rem;
+    }
+}
+
+/* 横屏手机适配 */
+@media (max-width: 768px) and (orientation: landscape) {
+    .video-player {
+        height: 150px;
+    }
+    
+    .video-meta {
+        flex-direction: row;
+        align-items: center;
+        gap: 1.5rem;
+    }
+    
+    .action-buttons {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.5rem;
+    }
+    
+    .action-btn {
+        padding: 8px 4px;
+        font-size: 12px;
+        min-height: 45px;
+    }
+}
+
+/* 平板适配 */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .video-container {
+        margin: 0 -20px;
+    }
+    
+    .video-player {
+        height: 300px;
+    }
+    
+    .action-buttons {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+    
+    .action-btn {
+        padding: 15px 10px;
+        font-size: 15px;
+        min-height: 70px;
+    }
+}
+
+/* 触摸设备优化 */
+@media (hover: none) and (pointer: coarse) {
+    .video-player:hover::before {
+        opacity: 0.8;
+    }
+    
+    .action-btn:hover {
+        transform: none;
+    }
+    
+    .action-btn:active {
+        transform: scale(0.95);
+    }
+    
+    .comment-item:hover {
+        transform: none;
+    }
+    
+    .comment-item:active {
+        transform: scale(0.98);
+    }
+}
+
+/* 高分辨率屏幕优化 */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .video-player video {
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
+    }
+    
+    .author-avatar {
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
+    }
+}
+
+/* 深色模式支持 */
+@media (prefers-color-scheme: dark) {
+    /* 可以根据需要添加深色模式样式 */
+}
+
+/* 减少动画（用户偏好） */
+@media (prefers-reduced-motion: reduce) {
+    .video-player::before,
+    .action-btn,
+    .comment-item {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
